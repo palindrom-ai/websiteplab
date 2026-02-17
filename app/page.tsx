@@ -326,15 +326,6 @@ export default function Home() {
         <div className={`hero-image ${introComplete ? 'intro-visible' : 'intro-hidden'}`}>
           <Image src="/hero-horse.png" alt="" width={600} height={600} priority />
         </div>
-        <div className={`hero-bottom-bar ${introComplete ? 'intro-visible' : 'intro-hidden'}`}>
-          <div className="hero-bottom-bar-content">
-            <span className="hero-bottom-bar-text">Trusted by leading enterprises across 12 industries</span>
-            <div className="hero-bottom-bar-links">
-              <a href="#case-studies">View case studies</a>
-              <a href="#services">Our services</a>
-            </div>
-          </div>
-        </div>
       </section>
 
       {/* Services */}
