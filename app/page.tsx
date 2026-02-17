@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
-import DitherBackground from './components/DitherBackground'
 import IntroAnimation from './components/IntroAnimation'
 
 const testimonials = [
@@ -28,20 +27,9 @@ const testimonials = [
 
 export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [windowSize, setWindowSize] = useState({ width: 1920, height: 1080 })
   const [scrolledPastHero, setScrolledPastHero] = useState(false)
   const [activeTestimonial, setActiveTestimonial] = useState(0)
   const [introComplete, setIntroComplete] = useState(false)
-
-  // Track window size for fullscreen hero
-  useEffect(() => {
-    const updateSize = () => {
-      setWindowSize({ width: window.innerWidth, height: window.innerHeight })
-    }
-    updateSize()
-    window.addEventListener('resize', updateSize)
-    return () => window.removeEventListener('resize', updateSize)
-  }, [])
 
   // Track scroll position for nav styling
   useEffect(() => {
@@ -322,15 +310,8 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Hero Section - Fullscreen with Dither Animation */}
+      {/* Hero Section - Fullscreen */}
       <section className="hero-fullscreen" id="hero">
-        <div className="hero-animation-bg">
-          <DitherBackground
-            width={windowSize.width}
-            height={windowSize.height}
-            blockSize={12}
-          />
-        </div>
         <div className="hero-vignette"></div>
         <div className={`hero-fullscreen-content ${introComplete ? 'intro-visible' : 'intro-hidden'}`}>
           <h1 className="hero-dark-title">Turn your company a leader in the age of AI</h1>
@@ -338,6 +319,9 @@ export default function Home() {
           <div className="hero-dark-actions">
             <a href="#contact" className="btn btn-white">Request a brainstorm</a>
           </div>
+        </div>
+        <div className={`hero-image ${introComplete ? 'intro-visible' : 'intro-hidden'}`}>
+          <Image src="/hero-horse.png" alt="" width={600} height={600} priority />
         </div>
         <div className={`hero-bottom-bar ${introComplete ? 'intro-visible' : 'intro-hidden'}`}>
           <div className="hero-bottom-bar-content">

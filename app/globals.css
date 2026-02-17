@@ -1679,9 +1679,35 @@ p {
   justify-content: flex-start;
 }
 
+.hero-image {
+  position: absolute;
+  right: 60px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 5;
+}
+
+.hero-image img {
+  max-height: 80vh;
+  width: auto;
+  object-fit: contain;
+}
+
+@media (max-width: 1024px) {
+  .hero-image {
+    right: 30px;
+  }
+  .hero-image img {
+    max-height: 60vh;
+  }
+}
+
 @media (max-width: 768px) {
   .hero-fullscreen-content {
     padding: 0 24px;
+  }
+  .hero-image {
+    display: none;
   }
 }
 
