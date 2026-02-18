@@ -1729,62 +1729,34 @@ p {
   }
 }
 
-/* Services Layout */
-.services-layout {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 60px;
-  align-items: center;
-}
-
-.services-flower {
-  position: relative;
-}
-
-.services-flower img {
-  max-height: 70vh;
-  width: auto;
-  object-fit: contain;
-}
-
-.services-flower-dither {
+/* Services Dither Line */
+.services-dither-line {
   position: absolute;
-  top: 25%;
-  left: 5%;
-  width: 240px;
-  height: 160px;
-  z-index: 10;
-  mix-blend-mode: multiply;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 24px;
+  pointer-events: none;
 }
 
-.services-content {
-  display: flex;
-  flex-direction: column;
-}
-
-.services-content .section-header {
-  margin-bottom: 40px;
+/* Services Grid Centered */
+.services-grid-centered {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 @media (max-width: 1024px) {
-  .services-layout {
-    grid-template-columns: 1fr;
-    gap: 40px;
-  }
-
-  .services-flower {
-    order: -1;
-    text-align: center;
-  }
-
-  .services-flower img {
-    max-height: 40vh;
+  .services-grid-centered {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
 @media (max-width: 768px) {
-  .services-flower {
-    display: none;
+  .services-grid-centered {
+    grid-template-columns: 1fr;
   }
 }
 

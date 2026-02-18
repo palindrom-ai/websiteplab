@@ -87,48 +87,32 @@ export default function IntroAnimation({ onComplete }: IntroAnimationProps) {
       }
     }
 
-    // Load flower image for brightness sampling
-    let flowerImageData: ImageData | null = null
-    const flowerImg = new Image()
-    flowerImg.src = '/hero-flower.png'
-    flowerImg.onload = () => {
-      const offscreen = document.createElement('canvas')
-      offscreen.width = flowerImg.width
-      offscreen.height = flowerImg.height
-      const offCtx = offscreen.getContext('2d')
-      if (offCtx) {
-        offCtx.drawImage(flowerImg, 0, 0)
-        flowerImageData = offCtx.getImageData(0, 0, flowerImg.width, flowerImg.height)
-      }
-    }
-
-    // Scroll tracking for horse-to-flower animation
+    // Scroll tracking for horse-to-line animation
     let scrollProgress = 0
     const updateScrollProgress = () => {
       const heroImage = document.querySelector('.hero-image img') as HTMLImageElement
-      const flowerImage = document.querySelector('.services-flower img') as HTMLImageElement
+      const ditherLine = document.querySelector('.services-dither-line') as HTMLElement
 
-      if (!heroImage || !flowerImage) {
+      if (!heroImage || !ditherLine) {
         scrollProgress = 0
         return
       }
 
       const heroRect = heroImage.getBoundingClientRect()
-      const flowerRect = flowerImage.getBoundingClientRect()
+      const lineRect = ditherLine.getBoundingClientRect()
 
       // Start animation when horse dither reaches top of viewport
-      // End animation when flower is in center of viewport
+      // End animation when line is at top of viewport
       const startTrigger = heroRect.top + heroRect.height * 0.3 // Where dither is on horse
-      const endTrigger = flowerRect.top + flowerRect.height * 0.5
+      const endTrigger = lineRect.top
 
       if (startTrigger > 0) {
         scrollProgress = 0
-      } else if (endTrigger < canvas.height / 2) {
+      } else if (endTrigger < 100) {
         scrollProgress = 1
       } else {
         // Calculate progress between start and end
-        const totalDistance = Math.abs(startTrigger) + (canvas.height / 2 - endTrigger)
-        scrollProgress = Math.abs(startTrigger) / (Math.abs(startTrigger) + endTrigger - canvas.height / 2)
+        scrollProgress = Math.abs(startTrigger) / (Math.abs(startTrigger) + endTrigger - 100)
         scrollProgress = Math.max(0, Math.min(1, scrollProgress))
       }
     }
@@ -686,34 +670,36 @@ export default function IntroAnimation({ onComplete }: IntroAnimationProps) {
       }
     }
 
-    // Draw dither at scroll-interpolated position between horse and flower
+    // Draw dither animating from horse to horizontal line at top of services section
     const drawScrollDither = () => {
       const heroImage = document.querySelector('.hero-image img') as HTMLImageElement
-      const flowerImage = document.querySelector('.services-flower img') as HTMLImageElement
+      const ditherLine = document.querySelector('.services-dither-line') as HTMLElement
 
       if (!heroImage) return
 
       const heroRect = heroImage.getBoundingClientRect()
-      const flowerRect = flowerImage?.getBoundingClientRect()
+      const lineRect = ditherLine?.getBoundingClientRect()
 
-      // Horse dither position
+      // Horse dither position (rectangle on horse)
       const horseRectX = heroRect.left + heroRect.width * 0.05
       const horseRectY = heroRect.top + heroRect.height * 0.30
+      const horseRectWidth = 240
+      const horseRectHeight = 160
 
-      // Flower dither position (if flower exists)
-      let flowerRectX = horseRectX
-      let flowerRectY = horseRectY
-      if (flowerRect) {
-        flowerRectX = flowerRect.left + flowerRect.width * 0.05
-        flowerRectY = flowerRect.top + flowerRect.height * 0.25
-      }
+      // Line position at top of services section
+      const lineY = lineRect ? lineRect.top : canvas.height
+      const lineWidth = canvas.width * 0.8
+      const lineX = (canvas.width - lineWidth) / 2
+      const lineHeight = 24
 
-      const targetRectWidth = 240
-      const targetRectHeight = 160
       const targetBlockSize = 12
-      const targetCols = Math.floor(targetRectWidth / targetBlockSize)
-      const targetRows = Math.floor(targetRectHeight / targetBlockSize)
-      const totalTargetBlocks = targetCols * targetRows
+      const horseCols = Math.floor(horseRectWidth / targetBlockSize)
+      const horseRows = Math.floor(horseRectHeight / targetBlockSize)
+      const totalHorseBlocks = horseCols * horseRows
+
+      // Line has more columns (spread horizontally)
+      const lineCols = Math.floor(lineWidth / targetBlockSize)
+      const lineRows = Math.floor(lineHeight / targetBlockSize) || 2
 
       // S-curve easing (smootherstep) - stickier to both ends
       const clampedScroll = Math.max(0, Math.min(1, scrollProgress))
@@ -733,44 +719,59 @@ export default function IntroAnimation({ onComplete }: IntroAnimationProps) {
         return (r * 0.299 + g * 0.587 + b * 0.114) / 255
       }
 
-      // Helper to sample brightness from flower image
-      const sampleFlowerBrightness = (screenX: number, screenY: number): number => {
-        if (!flowerImageData || !flowerImg.width || !flowerRect) return 0.5
-        const imgX = Math.floor(((screenX - flowerRect.left) / flowerRect.width) * flowerImg.width)
-        const imgY = Math.floor(((screenY - flowerRect.top) / flowerRect.height) * flowerImg.height)
-        const clampedX = Math.max(0, Math.min(flowerImg.width - 1, imgX))
-        const clampedY = Math.max(0, Math.min(flowerImg.height - 1, imgY))
-        const idx = (clampedY * flowerImg.width + clampedX) * 4
-        const r = flowerImageData.data[idx]
-        const g = flowerImageData.data[idx + 1]
-        const b = flowerImageData.data[idx + 2]
-        return (r * 0.299 + g * 0.587 + b * 0.114) / 255
-      }
-
-      for (let i = 0; i < totalTargetBlocks; i++) {
-        const targetCol = i % targetCols
-        const targetRow = Math.floor(i / targetCols)
+      // Draw blocks - each block from horse maps to a position on the line
+      for (let i = 0; i < totalHorseBlocks; i++) {
+        const horseCol = i % horseCols
+        const horseRow = Math.floor(i / horseCols)
 
         // Position on horse
-        const horseX = horseRectX + targetCol * targetBlockSize
-        const horseY = horseRectY + targetRow * targetBlockSize
+        const horseX = horseRectX + horseCol * targetBlockSize
+        const horseY = horseRectY + horseRow * targetBlockSize
 
-        // Position on flower
-        const flowerX = flowerRectX + targetCol * targetBlockSize
-        const flowerY = flowerRectY + targetRow * targetBlockSize
+        // Map to position on line - blocks spread from center outward
+        // First, map block index to line position
+        const lineCol = Math.floor((i / totalHorseBlocks) * lineCols)
+        const lineRow = i % lineRows
+
+        // Calculate distance from center for spread effect
+        const centerCol = lineCols / 2
+        const distFromCenter = Math.abs(lineCol - centerCol) / centerCol
+
+        // Final position on line
+        const finalLineX = lineX + lineCol * targetBlockSize
+        const finalLineY = lineY + lineRow * targetBlockSize
+
+        // Intermediate position (center of line) for the "gather then spread" effect
+        const centerX = canvas.width / 2
+        const centerY = lineY + lineHeight / 2
+
+        // Two-phase animation: gather to center, then spread to line position
+        const gatherProgress = Math.min(1, easedProgress * 2) // 0-0.5 of scroll
+        const spreadProgress = Math.max(0, (easedProgress - 0.5) * 2) // 0.5-1 of scroll
 
         // Random delay for staggered movement
-        const delay = getBlockRandom(horseX, horseY, 15) * 0.3
-        const blockProgress = Math.max(0, Math.min(1, (easedProgress - delay) / (1 - delay)))
+        const gatherDelay = getBlockRandom(horseX, horseY, 15) * 0.2
+        const spreadDelay = distFromCenter * 0.3 // Blocks further from center spread later
 
-        // Interpolate position
-        const currentX = horseX + (flowerX - horseX) * blockProgress
-        const currentY = horseY + (flowerY - horseY) * blockProgress
+        const adjustedGatherProgress = Math.max(0, Math.min(1, (gatherProgress - gatherDelay) / (1 - gatherDelay)))
+        const adjustedSpreadProgress = Math.max(0, Math.min(1, (spreadProgress - spreadDelay) / (1 - spreadDelay)))
 
-        // Interpolate brightness between horse and flower
-        const horseBrightness = sampleHorseBrightness(horseX + targetBlockSize / 2, horseY + targetBlockSize / 2)
-        const flowerBrightness = sampleFlowerBrightness(flowerX + targetBlockSize / 2, flowerY + targetBlockSize / 2)
-        const t = horseBrightness + (flowerBrightness - horseBrightness) * blockProgress
+        // Calculate current position
+        let currentX, currentY
+
+        if (easedProgress < 0.5) {
+          // Phase 1: Gather from horse to center
+          currentX = horseX + (centerX - horseX) * adjustedGatherProgress
+          currentY = horseY + (centerY - horseY) * adjustedGatherProgress
+        } else {
+          // Phase 2: Spread from center to line position
+          currentX = centerX + (finalLineX - centerX) * adjustedSpreadProgress
+          currentY = centerY + (finalLineY - centerY) * adjustedSpreadProgress
+        }
+
+        // Color based on position in gradient
+        const normalizedPos = lineCol / lineCols
+        const t = normalizedPos
 
         const blockColor = lerpColor(ditherColors.blockColorStart, ditherColors.blockColorEnd, t)
         ctx.fillStyle = blockColor
