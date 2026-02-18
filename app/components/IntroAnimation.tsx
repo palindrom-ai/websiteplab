@@ -670,14 +670,78 @@ export default function IntroAnimation({ onComplete }: IntroAnimationProps) {
       }
     }
 
+    // Helper to sample horse brightness
+    const sampleHorseBrightnessFn = (screenX: number, screenY: number, rect: DOMRect): number => {
+      if (!horseImageData || !horseImg.width) return 0.5
+      const imgX = Math.floor(((screenX - rect.left) / rect.width) * horseImg.width)
+      const imgY = Math.floor(((screenY - rect.top) / rect.height) * horseImg.height)
+      const clampedX = Math.max(0, Math.min(horseImg.width - 1, imgX))
+      const clampedY = Math.max(0, Math.min(horseImg.height - 1, imgY))
+      const idx = (clampedY * horseImg.width + clampedX) * 4
+      const r = horseImageData.data[idx]
+      const g = horseImageData.data[idx + 1]
+      const b = horseImageData.data[idx + 2]
+      return (r * 0.299 + g * 0.587 + b * 0.114) / 255
+    }
+
     // Draw dither animating from horse to horizontal line, then down sides
     const drawScrollDither = () => {
       const heroImage = document.querySelector('.hero-image img') as HTMLImageElement
       const servicesSection = document.querySelector('#services') as HTMLElement
 
-      if (!heroImage || !servicesSection) return
+      if (!heroImage) return
 
       const heroRect = heroImage.getBoundingClientRect()
+      const targetBlockSize = 12
+
+      // Helper to draw a single dither block
+      const drawBlock = (x: number, y: number, t: number, seedX: number, seedY: number) => {
+        const blockColor = lerpColor(ditherColors.blockColorStart, ditherColors.blockColorEnd, t)
+        ctx.fillStyle = blockColor
+        ctx.fillRect(x, y, targetBlockSize, targetBlockSize)
+
+        const rand1 = getBlockRandom(seedX, seedY, 1)
+        const rand2 = getBlockRandom(seedX, seedY, 2)
+        const rand3 = getBlockRandom(seedX, seedY, 3)
+        const circleColor = blendWithWhite(
+          parseInt(blockColor.match(/\d+/g)![0]),
+          parseInt(blockColor.match(/\d+/g)![1]),
+          parseInt(blockColor.match(/\d+/g)![2])
+        )
+
+        if (rand1 < circleProbability) {
+          ctx.fillStyle = circleColor
+          ctx.beginPath()
+          ctx.arc(x + targetBlockSize / 2, y + targetBlockSize / 2, targetBlockSize / 2 - 1, 0, Math.PI * 2)
+          ctx.fill()
+        } else if (rand2 < asciiProbability) {
+          const charIndex = Math.floor(rand3 * ASCII_CHARS.length)
+          ctx.fillStyle = circleColor
+          ctx.font = `${targetBlockSize * 0.9}px monospace`
+          ctx.textAlign = 'center'
+          ctx.textBaseline = 'middle'
+          ctx.fillText(ASCII_CHARS[charIndex], x + targetBlockSize / 2, y + targetBlockSize / 2)
+        }
+      }
+
+      // If services section not found or scroll is 0, just draw at horse position
+      if (!servicesSection || scrollProgress === 0) {
+        const horseRectX = heroRect.left + heroRect.width * 0.05
+        const horseRectY = heroRect.top + heroRect.height * 0.30
+        const horseCols = 20
+        const horseRows = 13
+
+        for (let row = 0; row < horseRows; row++) {
+          for (let col = 0; col < horseCols; col++) {
+            const x = horseRectX + col * targetBlockSize
+            const y = horseRectY + row * targetBlockSize
+            const t = sampleHorseBrightnessFn(x, y, heroRect)
+            drawBlock(x, y, t, x, y)
+          }
+        }
+        return
+      }
+
       const servicesRect = servicesSection.getBoundingClientRect()
 
       // Horse dither position (rectangle on horse)
@@ -691,118 +755,90 @@ export default function IntroAnimation({ onComplete }: IntroAnimationProps) {
       const sectionHeight = servicesRect.height
       const sectionLeft = servicesRect.left + 40
       const sectionRight = servicesRect.right - 40
+      const sectionBottom = sectionTop + sectionHeight - 40
 
-      const targetBlockSize = 12
       const horseCols = Math.floor(horseRectWidth / targetBlockSize)
       const horseRows = Math.floor(horseRectHeight / targetBlockSize)
       const totalHorseBlocks = horseCols * horseRows
-
-      // Line dimensions
-      const lineWidth = sectionRight - sectionLeft
-      const lineCols = Math.floor(lineWidth / targetBlockSize)
-
-      // Side dimensions (how far down)
-      const sideHeight = sectionHeight * 0.6
-      const sideRows = Math.floor(sideHeight / targetBlockSize)
 
       // S-curve easing (smootherstep) - stickier to both ends
       const clampedScroll = Math.max(0, Math.min(1, scrollProgress))
       const easedProgress = clampedScroll * clampedScroll * clampedScroll * (clampedScroll * (6 * clampedScroll - 15) + 10)
 
-      // Three-phase animation
-      const phase1End = 0.33  // Gather to center
-      const phase2End = 0.66  // Spread to line
-      // Phase 3: Flow down sides
+      // Phase thresholds
+      const phase1End = 0.25  // Gather to center
+      const phase2End = 0.5   // Spread to sides
+      // Phase 3: Flow down sides (0.5 - 1.0)
 
       const centerX = canvas.width / 2
-      const centerY = sectionTop + targetBlockSize
+      const centerY = sectionTop
 
-      // Draw blocks
-      for (let i = 0; i < totalHorseBlocks; i++) {
-        const horseCol = i % horseCols
-        const horseRow = Math.floor(i / horseCols)
+      // Calculate path dimensions
+      const halfWidth = (sectionRight - sectionLeft) / 2
+      const sideLength = sectionBottom - sectionTop
 
-        // Position on horse
-        const horseX = horseRectX + horseCol * targetBlockSize
-        const horseY = horseRectY + horseRow * targetBlockSize
+      // Total path length: center to edge + edge to bottom
+      const horizontalPathLength = halfWidth
+      const verticalPathLength = sideLength
+      const totalPathLength = horizontalPathLength + verticalPathLength
 
-        // Determine if this block goes left or right side
-        const goesLeft = i < totalHorseBlocks / 2
+      // Number of blocks per vertical side (determines density of the vertical lines)
+      const blocksPerVerticalLine = Math.floor(verticalPathLength / targetBlockSize)
 
-        // Position on horizontal line
-        const lineCol = Math.floor((i / totalHorseBlocks) * lineCols)
-        const lineX = sectionLeft + lineCol * targetBlockSize
-        const lineY = sectionTop
+      // Draw blocks for each side (left and right)
+      for (let side = 0; side < 2; side++) {
+        const isLeft = side === 0
+        const direction = isLeft ? -1 : 1
 
-        // Position on side (flowing down)
-        const sideBlockIndex = goesLeft ? i : i - Math.floor(totalHorseBlocks / 2)
-        const sideRow = Math.floor(sideBlockIndex / 2) % sideRows
-        const sideX = goesLeft ? sectionLeft : sectionRight - targetBlockSize
-        const sideY = sectionTop + sideRow * targetBlockSize
+        for (let i = 0; i < blocksPerVerticalLine; i++) {
+          // Each block's final position on the vertical line
+          const finalX = isLeft ? sectionLeft : sectionRight - targetBlockSize
+          const finalY = centerY + i * targetBlockSize
 
-        // Random delays
-        const gatherDelay = getBlockRandom(horseX, horseY, 15) * 0.15
-        const spreadDelay = Math.abs(lineCol - lineCols / 2) / lineCols * 0.2
-        const flowDelay = sideRow / sideRows * 0.3
+          // Source position on horse (map to horse grid)
+          const horseIndex = (side * blocksPerVerticalLine + i) % totalHorseBlocks
+          const horseCol = horseIndex % horseCols
+          const horseRow = Math.floor(horseIndex / horseCols)
+          const horseX = horseRectX + horseCol * targetBlockSize
+          const horseY = horseRectY + horseRow * targetBlockSize
 
-        let currentX, currentY
+          // Staggered departure - blocks leave center at different times creating a stream
+          const departureDelay = i / blocksPerVerticalLine * 0.8
 
-        if (easedProgress < phase1End) {
-          // Phase 1: Gather from horse to center
-          const phaseProgress = easedProgress / phase1End
-          const adjustedProgress = Math.max(0, Math.min(1, (phaseProgress - gatherDelay) / (1 - gatherDelay)))
-          currentX = horseX + (centerX - horseX) * adjustedProgress
-          currentY = horseY + (centerY - horseY) * adjustedProgress
-        } else if (easedProgress < phase2End) {
-          // Phase 2: Spread from center to line
-          const phaseProgress = (easedProgress - phase1End) / (phase2End - phase1End)
-          const adjustedProgress = Math.max(0, Math.min(1, (phaseProgress - spreadDelay) / (1 - spreadDelay)))
-          currentX = centerX + (lineX - centerX) * adjustedProgress
-          currentY = centerY + (lineY - centerY) * adjustedProgress
-        } else {
-          // Phase 3: Flow down the sides
-          const phaseProgress = (easedProgress - phase2End) / (1 - phase2End)
-          const adjustedProgress = Math.max(0, Math.min(1, (phaseProgress - flowDelay) / (1 - flowDelay)))
-          currentX = lineX + (sideX - lineX) * adjustedProgress
-          currentY = lineY + (sideY - lineY) * adjustedProgress
+          let currentX, currentY
+
+          if (easedProgress < phase1End) {
+            // Phase 1: Gather from horse to center
+            const phaseProgress = easedProgress / phase1End
+            const delay = getBlockRandom(horseX, horseY, 15) * 0.3
+            const adjustedProgress = Math.max(0, Math.min(1, (phaseProgress - delay) / (1 - delay)))
+            currentX = horseX + (centerX - horseX) * adjustedProgress
+            currentY = horseY + (centerY - horseY) * adjustedProgress
+          } else if (easedProgress < phase2End) {
+            // Phase 2: Flow horizontally from center to the edges with staggered timing
+            const phaseProgress = (easedProgress - phase1End) / (phase2End - phase1End)
+
+            // Each block departs at a different time, creating a flowing stream
+            const adjustedProgress = Math.max(0, Math.min(1, (phaseProgress - departureDelay) / (1 - departureDelay)))
+
+            currentX = centerX + direction * halfWidth * adjustedProgress
+            currentY = centerY
+          } else {
+            // Phase 3: Flow down to final positions
+            const phaseProgress = (easedProgress - phase2End) / (1 - phase2End)
+
+            // Each block flows down to its final Y position with staggered timing
+            const adjustedProgress = Math.max(0, Math.min(1, (phaseProgress - departureDelay * 0.7) / (1 - departureDelay * 0.7)))
+
+            currentX = finalX
+            currentY = centerY + (finalY - centerY) * adjustedProgress
+          }
+
+          // Color gradient based on vertical position (top = blue, bottom = cyan)
+          const t = i / blocksPerVerticalLine
+
+          drawBlock(currentX, currentY, t, horseX, horseY)
         }
-
-        // Color gradient based on vertical position
-        const normalizedY = (currentY - sectionTop) / sideHeight
-        const t = Math.max(0, Math.min(1, normalizedY))
-
-        const blockColor = lerpColor(ditherColors.blockColorStart, ditherColors.blockColorEnd, 1 - t)
-        ctx.fillStyle = blockColor
-        ctx.globalAlpha = 1
-        ctx.fillRect(currentX, currentY, targetBlockSize, targetBlockSize)
-
-        // Get random values for decoration
-        const rand1 = getBlockRandom(horseX, horseY, 1)
-        const rand2 = getBlockRandom(horseX, horseY, 2)
-        const rand3 = getBlockRandom(horseX, horseY, 3)
-
-        const circleColor = blendWithWhite(
-          parseInt(blockColor.match(/\d+/g)![0]),
-          parseInt(blockColor.match(/\d+/g)![1]),
-          parseInt(blockColor.match(/\d+/g)![2])
-        )
-
-        if (rand1 < circleProbability) {
-          ctx.fillStyle = circleColor
-          ctx.beginPath()
-          ctx.arc(currentX + targetBlockSize / 2, currentY + targetBlockSize / 2, targetBlockSize / 2 - 1, 0, Math.PI * 2)
-          ctx.fill()
-        } else if (rand2 < asciiProbability) {
-          const charIndex = Math.floor(rand3 * ASCII_CHARS.length)
-          const char = ASCII_CHARS[charIndex]
-          ctx.fillStyle = circleColor
-          ctx.font = `${targetBlockSize * 0.9}px monospace`
-          ctx.textAlign = 'center'
-          ctx.textBaseline = 'middle'
-          ctx.fillText(char, currentX + targetBlockSize / 2, currentY + targetBlockSize / 2)
-        }
-
-        ctx.globalAlpha = 1
       }
     }
 
