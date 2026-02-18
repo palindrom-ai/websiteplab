@@ -331,29 +331,31 @@ export default function Home() {
 
       {/* Services */}
       <section className="section" id="services">
-        <div className="services-flower">
-          <div className="services-flower-dither">
-            <DitherBackground
-              width={240}
-              height={160}
-              blockSize={12}
-              imageSrc="/hero-flower.png"
-              imageOffsetX={0}
-              imageOffsetY={20}
-              imageCropWidth={80}
-              imageCropHeight={50}
-            />
-          </div>
-          <Image src="/hero-flower.png" alt="" width={500} height={500} />
-        </div>
         <div className="container">
-          <div className="section-header fade-up">
-            <p className="label">What we do</p>
-            <h2>End-to-end AI consultancy<br />and technology services</h2>
-            <p>From strategic advisory and business planning to custom software development and AI-as-a-Service platforms — we bridge the gap between ambition and production.</p>
-          </div>
+          <div className="services-layout">
+            <div className="services-flower">
+              <div className="services-flower-dither">
+                <DitherBackground
+                  width={240}
+                  height={160}
+                  blockSize={12}
+                  imageSrc="/hero-flower.png"
+                  imageOffsetX={0}
+                  imageOffsetY={20}
+                  imageCropWidth={80}
+                  imageCropHeight={50}
+                />
+              </div>
+              <Image src="/hero-flower.png" alt="" width={500} height={500} />
+            </div>
+            <div className="services-content">
+              <div className="section-header fade-up">
+                <p className="label">What we do</p>
+                <h2>End-to-end AI consultancy<br />and technology services</h2>
+                <p>From strategic advisory and business planning to custom software development and AI-as-a-Service platforms — we bridge the gap between ambition and production.</p>
+              </div>
 
-          <div className="services-list">
+              <div className="services-list">
             {/* Service 1 */}
             <div className="service-card fade-up">
               <div className="service-icon service-icon-strategy">
@@ -392,6 +394,8 @@ export default function Home() {
               <h4>Strategic AI Roadmapping</h4>
               <p>Professional business consultancy helping organizations plan, prioritize, and implement AI across their operations. Business analysis and strategic advisory for long-term competitive advantage.</p>
               <a href="#" className="service-link">Learn more &rarr;</a>
+            </div>
+              </div>
             </div>
           </div>
         </div>
