@@ -680,6 +680,13 @@ p {
   gap: 24px;
 }
 
+.services-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 600px;
+}
+
 .service-card {
   background: var(--white);
   border-radius: var(--radius-md);

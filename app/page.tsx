@@ -353,13 +353,7 @@ export default function Home() {
             <p>From strategic advisory and business planning to custom software development and AI-as-a-Service platforms — we bridge the gap between ambition and production.</p>
           </div>
 
-          <div className="services-grid">
-            {/* Business & Strategy Divider */}
-            <div className="services-divider">
-              <span className="label">Business &amp; Strategy</span>
-              <hr />
-            </div>
-
+          <div className="services-list">
             {/* Service 1 */}
             <div className="service-card fade-up">
               <div className="service-icon service-icon-strategy">
@@ -397,54 +391,6 @@ export default function Home() {
               </div>
               <h4>Strategic AI Roadmapping</h4>
               <p>Professional business consultancy helping organizations plan, prioritize, and implement AI across their operations. Business analysis and strategic advisory for long-term competitive advantage.</p>
-              <a href="#" className="service-link">Learn more &rarr;</a>
-            </div>
-
-            {/* Technology & Engineering Divider */}
-            <div className="services-divider">
-              <span className="label">Technology &amp; Engineering</span>
-              <hr />
-            </div>
-
-            {/* Service 4 */}
-            <div className="service-card fade-up">
-              <div className="service-icon service-icon-platform">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect x="1" y="1" width="18" height="18" rx="3" stroke="currentColor" strokeWidth="1.5"/>
-                  <circle cx="7" cy="7" r="2" stroke="currentColor" strokeWidth="1.5"/>
-                  <circle cx="13" cy="13" r="2" stroke="currentColor" strokeWidth="1.5"/>
-                  <line x1="9" y1="7" x2="13" y2="11" stroke="currentColor" strokeWidth="1.5"/>
-                </svg>
-              </div>
-              <h4>AI Platform &amp; AIaaS</h4>
-              <p>Artificial intelligence as a service featuring machine learning, data analytics, speech recognition, database management, and business analytics. Enterprise-grade AI infrastructure, managed for you.</p>
-              <a href="#" className="service-link">Learn more &rarr;</a>
-            </div>
-
-            {/* Service 5 */}
-            <div className="service-card fade-up">
-              <div className="service-icon service-icon-dev">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <polyline points="6,5 2,10 6,15" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-                  <polyline points="14,5 18,10 14,15" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-                  <line x1="12" y1="3" x2="8" y2="17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                </svg>
-              </div>
-              <h4>Custom Software Development</h4>
-              <p>Computer programming, software design, and writing of computer code tailored to your business challenges. From prototype to production — we build software that scales.</p>
-              <a href="#" className="service-link">Learn more &rarr;</a>
-            </div>
-
-            {/* Service 6 */}
-            <div className="service-card fade-up">
-              <div className="service-icon service-icon-research">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5"/>
-                  <line x1="12.5" y1="12.5" x2="18" y2="18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                </svg>
-              </div>
-              <h4>AI Research &amp; Consultancy</h4>
-              <p>Research in artificial intelligence technology, consultancy in AI technology, and technical support services. We solve the problems others can&apos;t — from computer vision to natural language understanding.</p>
               <a href="#" className="service-link">Learn more &rarr;</a>
             </div>
           </div>
