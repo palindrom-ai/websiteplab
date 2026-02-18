@@ -1725,34 +1725,31 @@ p {
 /* Services Flower */
 .services-flower {
   position: absolute;
-  left: 60px;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 1;
+  right: 0;
+  top: 0;
+  z-index: 0;
 }
 
 .services-flower img {
-  max-height: 60vh;
+  max-height: 50vh;
   width: auto;
   object-fit: contain;
+  opacity: 0.7;
 }
 
 .services-flower-dither {
   position: absolute;
   top: 25%;
-  left: 10%;
+  left: 5%;
   width: 240px;
   height: 160px;
   z-index: 10;
   mix-blend-mode: multiply;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1200px) {
   .services-flower {
-    left: 30px;
-  }
-  .services-flower img {
-    max-height: 50vh;
+    opacity: 0.5;
   }
 }
 
