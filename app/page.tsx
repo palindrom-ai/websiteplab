@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import Image from 'next/image'
 import IntroAnimation from './components/IntroAnimation'
-import DitherBackground from './components/DitherBackground'
 
 const testimonials = [
   {
@@ -340,18 +339,6 @@ export default function Home() {
 
           <div className="services-layout">
             <div className="services-flower">
-              <div className="services-flower-dither">
-                <DitherBackground
-                  width={240}
-                  height={160}
-                  blockSize={12}
-                  imageSrc="/hero-flower.png"
-                  imageOffsetX={0}
-                  imageOffsetY={20}
-                  imageCropWidth={80}
-                  imageCropHeight={50}
-                />
-              </div>
               <Image src="/hero-flower.png" alt="" width={500} height={500} />
             </div>
             <div className="services-content">
