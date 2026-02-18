@@ -765,25 +765,25 @@ export default function IntroAnimation({ onComplete }: IntroAnimationProps) {
       const clampedScroll = Math.max(0, Math.min(1, scrollProgress))
       const easedProgress = clampedScroll * clampedScroll * clampedScroll * (clampedScroll * (6 * clampedScroll - 15) + 10)
 
-      // Phase thresholds
-      const phase1End = 0.25  // Gather to center
-      const phase2End = 0.5   // Spread to sides
-      // Phase 3: Flow down sides (0.5 - 1.0)
+      // Phase thresholds - 4 phases now
+      const phase1End = 0.15  // Gather under horse
+      const phase2End = 0.35  // Flow down to services section center
+      const phase3End = 0.6   // Spread horizontally to sides
+      // Phase 4: Flow down sides (0.6 - 1.0)
 
       const centerX = canvas.width / 2
-      const centerY = sectionTop
+      const serviceCenterY = sectionTop
+
+      // Position right under the horse image
+      const horseBottomY = horseRectY + horseRectHeight + 20
+      const horseStartX = horseRectX + horseRectWidth / 2
 
       // Calculate path dimensions
       const halfWidth = (sectionRight - sectionLeft) / 2
       const sideLength = sectionBottom - sectionTop
 
-      // Total path length: center to edge + edge to bottom
-      const horizontalPathLength = halfWidth
-      const verticalPathLength = sideLength
-      const totalPathLength = horizontalPathLength + verticalPathLength
-
       // Number of blocks per vertical side (determines density of the vertical lines)
-      const blocksPerVerticalLine = Math.floor(verticalPathLength / targetBlockSize)
+      const blocksPerVerticalLine = Math.floor(sideLength / targetBlockSize)
 
       // Draw blocks for each side (left and right)
       for (let side = 0; side < 2; side++) {
@@ -793,7 +793,7 @@ export default function IntroAnimation({ onComplete }: IntroAnimationProps) {
         for (let i = 0; i < blocksPerVerticalLine; i++) {
           // Each block's final position on the vertical line
           const finalX = isLeft ? sectionLeft : sectionRight - targetBlockSize
-          const finalY = centerY + i * targetBlockSize
+          const finalY = serviceCenterY + i * targetBlockSize
 
           // Source position on horse (map to horse grid)
           const horseIndex = (side * blocksPerVerticalLine + i) % totalHorseBlocks
@@ -802,36 +802,50 @@ export default function IntroAnimation({ onComplete }: IntroAnimationProps) {
           const horseX = horseRectX + horseCol * targetBlockSize
           const horseY = horseRectY + horseRow * targetBlockSize
 
-          // Staggered departure - blocks leave center at different times creating a stream
-          const departureDelay = i / blocksPerVerticalLine * 0.8
+          // Staggered timing for flowing effect
+          const streamDelay = i / blocksPerVerticalLine * 0.7
 
           let currentX, currentY
 
           if (easedProgress < phase1End) {
-            // Phase 1: Gather from horse to center
+            // Phase 1: Gather from horse dither to a point under the horse
             const phaseProgress = easedProgress / phase1End
             const delay = getBlockRandom(horseX, horseY, 15) * 0.3
             const adjustedProgress = Math.max(0, Math.min(1, (phaseProgress - delay) / (1 - delay)))
-            currentX = horseX + (centerX - horseX) * adjustedProgress
-            currentY = horseY + (centerY - horseY) * adjustedProgress
+            currentX = horseX + (horseStartX - horseX) * adjustedProgress
+            currentY = horseY + (horseBottomY - horseY) * adjustedProgress
           } else if (easedProgress < phase2End) {
-            // Phase 2: Flow horizontally from center to the edges with staggered timing
+            // Phase 2: Flow straight DOWN from under horse to services section (keep X fixed)
             const phaseProgress = (easedProgress - phase1End) / (phase2End - phase1End)
+            const adjustedProgress = Math.max(0, Math.min(1, (phaseProgress - streamDelay * 0.3) / (1 - streamDelay * 0.3)))
 
-            // Each block departs at a different time, creating a flowing stream
-            const adjustedProgress = Math.max(0, Math.min(1, (phaseProgress - departureDelay) / (1 - departureDelay)))
+            // Keep X at horse position, only move Y down
+            currentX = horseStartX
+            currentY = horseBottomY + (serviceCenterY - horseBottomY) * adjustedProgress
+          } else if (easedProgress < phase3End) {
+            // Phase 3: First move to center, then spread horizontally to the edges
+            const phaseProgress = (easedProgress - phase2End) / (phase3End - phase2End)
+            const adjustedProgress = Math.max(0, Math.min(1, (phaseProgress - streamDelay) / (1 - streamDelay)))
 
-            currentX = centerX + direction * halfWidth * adjustedProgress
-            currentY = centerY
+            // First half: move from horse X to center X
+            // Second half: spread from center to edges
+            if (adjustedProgress < 0.4) {
+              // Move to center
+              const toCenterProgress = adjustedProgress / 0.4
+              currentX = horseStartX + (centerX - horseStartX) * toCenterProgress
+            } else {
+              // Spread to edges
+              const spreadProgress = (adjustedProgress - 0.4) / 0.6
+              currentX = centerX + direction * halfWidth * spreadProgress
+            }
+            currentY = serviceCenterY
           } else {
-            // Phase 3: Flow down to final positions
-            const phaseProgress = (easedProgress - phase2End) / (1 - phase2End)
-
-            // Each block flows down to its final Y position with staggered timing
-            const adjustedProgress = Math.max(0, Math.min(1, (phaseProgress - departureDelay * 0.7) / (1 - departureDelay * 0.7)))
+            // Phase 4: Flow down to final positions on the sides
+            const phaseProgress = (easedProgress - phase3End) / (1 - phase3End)
+            const adjustedProgress = Math.max(0, Math.min(1, (phaseProgress - streamDelay * 0.7) / (1 - streamDelay * 0.7)))
 
             currentX = finalX
-            currentY = centerY + (finalY - centerY) * adjustedProgress
+            currentY = serviceCenterY + (finalY - serviceCenterY) * adjustedProgress
           }
 
           // Color gradient based on vertical position (top = blue, bottom = cyan)
