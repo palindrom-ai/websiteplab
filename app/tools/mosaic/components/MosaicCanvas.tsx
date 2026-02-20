@@ -20,6 +20,7 @@ interface MosaicCanvasProps {
   subjectMask?: Uint8Array | null;
   onCanvasClick?: (x: number, y: number, label: 0 | 1) => void;
   clickPoints?: ClickPoint[];
+  overlayCanvasRef?: React.RefObject<HTMLCanvasElement | null>;
 }
 
 export interface MosaicCanvasHandle {
@@ -27,7 +28,7 @@ export interface MosaicCanvasHandle {
 }
 
 const MosaicCanvas = forwardRef<MosaicCanvasHandle, MosaicCanvasProps>(
-  function MosaicCanvas({ buffer, params, subjectMask, onCanvasClick, clickPoints }, ref) {
+  function MosaicCanvas({ buffer, params, subjectMask, onCanvasClick, clickPoints, overlayCanvasRef }, ref) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const { render, renderAnimated, cleanup } = useMosaicRenderer();
@@ -107,16 +108,28 @@ const MosaicCanvas = forwardRef<MosaicCanvasHandle, MosaicCanvasProps>(
       onCanvasClick(coords.imageX, coords.imageY, 0);
     }, [clickEnabled, onCanvasClick, cssToImageCoords]);
 
-    // Export handler
+    // Export handler — composites overlay canvas onto main before exporting
     const exportPNG = useCallback(() => {
       const canvas = canvasRef.current;
       if (!canvas) return;
+
+      // Composite overlay (surface lines) onto main canvas for export
+      const overlay = overlayCanvasRef?.current;
+      if (overlay && overlay.width > 0 && overlay.height > 0) {
+        const ctx = canvas.getContext('2d');
+        if (ctx) ctx.drawImage(overlay, 0, 0);
+      }
 
       const link = document.createElement('a');
       link.download = `mosaic-${Date.now()}.png`;
       link.href = canvas.toDataURL('image/png');
       link.click();
-    }, []);
+
+      // Re-render main canvas to restore (remove composited overlay)
+      if (overlay && buffer) {
+        render(canvas, buffer, params, subjectMask);
+      }
+    }, [overlayCanvasRef, buffer, params, subjectMask, render]);
 
     useImperativeHandle(ref, () => ({ exportPNG }), [exportPNG]);
 
@@ -170,6 +183,11 @@ const MosaicCanvas = forwardRef<MosaicCanvasHandle, MosaicCanvasProps>(
               }}
               onClick={handleClick}
               onContextMenu={handleContextMenu}
+            />
+            {/* Surface line overlay canvas */}
+            <canvas
+              ref={overlayCanvasRef as React.RefObject<HTMLCanvasElement>}
+              className="mosaic-overlay-canvas"
             />
             {/* Click point overlay dots */}
             {clickEnabled && clickPoints && clickPoints.length > 0 && (

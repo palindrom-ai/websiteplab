@@ -5,7 +5,7 @@ import { drawPixelBlock, drawConvexCircle, drawAsciiChar } from '../utils/shapes
 
 export type ShapeMode = 'pixel' | 'circle';
 export type ColorMode = 'original' | 'gradient';
-export type BgMode = 'black' | 'white' | 'transparent';
+export type BgMode = 'black' | 'white' | 'transparent' | 'grid';
 export type MaskMode = 'none' | 'split' | 'subject' | 'auto';
 
 export interface GradientStop {
@@ -33,6 +33,16 @@ export interface MosaicParams {
   // Auto brightness mask params (used when maskMode='auto')
   autoBrightnessCutoff: number; // 0-255, pixels above this get the mosaic effect
   invertAutoMask: boolean;
+  // Mask dilation: expand the mask boundary by N pixels to capture edge details (stems, thin features)
+  maskDilation: number; // 0-8
+  // Surface line fill: organic lines that fill gaps between mosaic cells in the subject mask
+  surfaceLineEnabled: boolean;
+  surfaceLineCount: number;         // 30-150, number of lines
+  surfaceLineStepDistance: number;   // 1-6px, controls line spread
+  surfaceLineWidth: number;         // 0.5-3px
+  surfaceLineGlow: number;          // 0-1
+  surfaceLineOpacity: number;       // 0-1
+  surfaceLineDuration: number;       // 500-5000ms, animation duration
 }
 
 // ── Brand Color Palettes ──
@@ -124,7 +134,7 @@ export const DEFAULT_GRADIENT_STOPS: GradientStop[] = BRAND_PALETTES[0].stops;
 
 export const DEFAULT_PARAMS: MosaicParams = {
   shapeMode: 'circle',
-  cellSize: 12,
+  cellSize: 8,
   spacing: 0,
   threshold: 0,
   invertThreshold: false,
@@ -139,13 +149,21 @@ export const DEFAULT_PARAMS: MosaicParams = {
   splitAngle: 45,
   autoBrightnessCutoff: 128,
   invertAutoMask: false,
+  maskDilation: 2,
+  surfaceLineEnabled: false,
+  surfaceLineCount: 60,
+  surfaceLineStepDistance: 3,
+  surfaceLineWidth: 1.5,
+  surfaceLineGlow: 0.3,
+  surfaceLineOpacity: 0.7,
+  surfaceLineDuration: 2000,
 };
 
 /**
  * Determines if a point is on the "effect" side of the split line.
  * Simple half-plane test — works at any angle, no polygon needed.
  */
-function isOnEffectSide(
+export function isOnEffectSide(
   x: number, y: number,
   width: number, height: number,
   position: number, angleDeg: number
@@ -157,6 +175,68 @@ function isOnEffectSide(
   const cy = position * height;
   const dot = (x - cx) * nx + (y - cy) * ny;
   return dot >= 0;
+}
+
+/**
+ * Draws a 60px blueprint-style grid on the canvas, matching the site body grid.
+ * Background: #f0e6d3, lines: rgba(80,60,30,0.06) at 60px spacing.
+ */
+function drawGridBackground(ctx: CanvasRenderingContext2D, width: number, height: number) {
+  ctx.fillStyle = '#f0e6d3';
+  ctx.fillRect(0, 0, width, height);
+
+  ctx.strokeStyle = 'rgba(80, 60, 30, 0.06)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (let x = 0; x <= width; x += 60) {
+    ctx.moveTo(x + 0.5, 0);
+    ctx.lineTo(x + 0.5, height);
+  }
+  for (let y = 0; y <= height; y += 60) {
+    ctx.moveTo(0, y + 0.5);
+    ctx.lineTo(width, y + 0.5);
+  }
+  ctx.stroke();
+}
+
+/**
+ * Morphological dilation: expands the mask by `radius` pixels.
+ * For each background pixel, if any foreground pixel exists within the radius, it becomes foreground.
+ * Uses a cached result to avoid recomputing on every render frame.
+ */
+let _dilationCache: { key: string; result: Uint8Array } | null = null;
+
+export function dilateMask(mask: Uint8Array, w: number, h: number, radius: number): Uint8Array {
+  if (radius <= 0) return mask;
+
+  // Cache key: mask identity + dimensions + radius
+  const key = `${mask.length}_${w}_${h}_${radius}_${mask[0]}_${mask[Math.floor(mask.length / 2)]}_${mask[mask.length - 1]}`;
+  if (_dilationCache && _dilationCache.key === key) return _dilationCache.result;
+
+  const out = new Uint8Array(mask.length);
+  out.set(mask);
+
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      if (mask[y * w + x] === 1) continue; // already foreground
+      // Check neighborhood
+      let found = false;
+      for (let dy = -radius; dy <= radius && !found; dy++) {
+        for (let dx = -radius; dx <= radius && !found; dx++) {
+          if (dx * dx + dy * dy > radius * radius) continue; // circular kernel
+          const nx = x + dx;
+          const ny = y + dy;
+          if (nx >= 0 && nx < w && ny >= 0 && ny < h && mask[ny * w + nx] === 1) {
+            found = true;
+          }
+        }
+      }
+      if (found) out[y * w + x] = 1;
+    }
+  }
+
+  _dilationCache = { key, result: out };
+  return out;
 }
 
 export function useMosaicRenderer() {
@@ -180,6 +260,7 @@ export function useMosaicRenderer() {
       colorMode, gradientStops, bgMode, asciiEnabled, asciiOpacity,
       maskMode, splitPosition, splitAngle,
       autoBrightnessCutoff, invertAutoMask,
+      maskDilation,
     } = params;
 
     // Derive effective mask modes
@@ -199,7 +280,13 @@ export function useMosaicRenderer() {
       }
     }
 
-    // Step 1: Draw original image as the base layer
+    // Apply mask dilation to capture thin edge details (stems, fine features)
+    let effectiveMask = subjectMask;
+    if (effectiveMask && maskDilation > 0 && (useSubject || useAuto)) {
+      effectiveMask = dilateMask(effectiveMask, maskW, maskH, maskDilation);
+    }
+
+    // Step 1: Prepare original image offscreen
     const offscreen = document.createElement('canvas');
     offscreen.width = width;
     offscreen.height = height;
@@ -210,23 +297,30 @@ export function useMosaicRenderer() {
       height
     );
     offCtx.putImageData(imgData, 0, 0);
-    ctx.drawImage(offscreen, 0, 0);
 
-    // Step 2: Render mosaic cells
+    // Step 2: Draw base layer depending on mask mode
+    // For split: original image as base (un-masked side stays as original)
+    // For subject/auto/none: fill entire canvas with selected bg so non-masked areas show the bg
+    if (useSplit) {
+      ctx.drawImage(offscreen, 0, 0);
+    } else {
+      if (bgMode === 'transparent') {
+        ctx.clearRect(0, 0, width, height);
+      } else if (bgMode === 'grid') {
+        drawGridBackground(ctx, width, height);
+      } else if (bgMode === 'black') {
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, width, height);
+      } else {
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, width, height);
+      }
+    }
+
+    // Step 3: Render mosaic cells
     const step = cellSize * 2 + spacing;
     const cols = Math.ceil(width / step);
     const rows = Math.ceil(height / step);
-
-    // For 'none' mode, fill background over entire canvas
-    // For 'subject'/'auto' modes, keep the original image — only overlay mosaic on masked cells
-    if (!useSplit && !useSubject && !useAuto) {
-      if (bgMode !== 'transparent') {
-        ctx.fillStyle = bgMode === 'black' ? '#000' : '#fff';
-        ctx.fillRect(0, 0, width, height);
-      } else {
-        ctx.clearRect(0, 0, width, height);
-      }
-    }
 
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
@@ -244,7 +338,7 @@ export function useMosaicRenderer() {
           const mx = Math.round(cellX * maskW / width);
           const my = Math.round(cellY * maskH / height);
           const maskIdx = my * maskW + mx;
-          if (maskIdx < 0 || maskIdx >= subjectMask.length || subjectMask[maskIdx] === 0) continue;
+          if (maskIdx < 0 || maskIdx >= effectiveMask!.length || effectiveMask![maskIdx] === 0) continue;
         }
 
         const [r, g, b] = sampleColorAt(buffer, cellX, cellY);
@@ -259,11 +353,11 @@ export function useMosaicRenderer() {
           if (!passesBrightness) continue;
 
           // Subject mask refinement: further filter auto-selected cells
-          if (subjectMask) {
+          if (effectiveMask) {
             const mx = Math.round(cellX * maskW / width);
             const my = Math.round(cellY * maskH / height);
             const maskIdx = my * maskW + mx;
-            if (maskIdx >= 0 && maskIdx < subjectMask.length && subjectMask[maskIdx] === 0) continue;
+            if (maskIdx >= 0 && maskIdx < effectiveMask.length && effectiveMask[maskIdx] === 0) continue;
           }
         }
 
@@ -282,9 +376,12 @@ export function useMosaicRenderer() {
           [fillR, fillG, fillB] = multiStopGradientColor(brightness, gradientStops.map(s => s.color));
         }
 
-        // Draw background behind this cell (in split, subject, or auto mode — per-cell, not full canvas)
-        if (useSplit || useSubject || useAuto) {
-          if (bgMode !== 'transparent') {
+        // Draw background behind this cell (only needed for split mode where base is original image)
+        if (useSplit) {
+          if (bgMode === 'grid') {
+            ctx.fillStyle = '#f0e6d3';
+            ctx.fillRect(cellX - cellSize - spacing / 2, cellY - cellSize - spacing / 2, cellSize * 2 + spacing, cellSize * 2 + spacing);
+          } else if (bgMode !== 'transparent') {
             ctx.fillStyle = bgMode === 'black' ? '#000' : '#fff';
             ctx.fillRect(cellX - cellSize - spacing / 2, cellY - cellSize - spacing / 2, cellSize * 2 + spacing, cellSize * 2 + spacing);
           }

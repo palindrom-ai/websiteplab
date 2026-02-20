@@ -9,6 +9,7 @@ import { ImageBuffer, loadImageToBuffer } from './utils/imageProcessing';
 import { useVideoPlayer, PlaybackQuality } from './hooks/useVideoPlayer';
 import { useSubjectMask } from './hooks/useSubjectMask';
 import { useVideoExporter, ExportOptions } from './hooks/useVideoExporter';
+import { useSurfaceLines } from './hooks/useSurfaceLines';
 
 export default function MosaicToolPage() {
   const [params, setParams] = useState<MosaicParams>(DEFAULT_PARAMS);
@@ -43,6 +44,16 @@ export default function MosaicToolPage() {
 
   // Video exporter
   const { exportState, startExport, cancelExport } = useVideoExporter();
+
+  // Surface lines
+  const {
+    startAnimation: startLineAnimation,
+    reset: resetLines,
+    bakeOntoCanvas: bakeLines,
+    cleanup: cleanupLines,
+  } = useSurfaceLines();
+  const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
+  const lineDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Track whether the SAM model has been initialized
   const modelInitedRef = useRef(false);
@@ -87,6 +98,53 @@ export default function MosaicToolPage() {
       console.error('Subject mask setup failed:', err);
     });
   }, [usesSAM, buffer, initModel, encodeImage, isMaskLocked]);
+
+  // Trigger surface line animation when enabled and relevant params change (debounced)
+  useEffect(() => {
+    if (!params.surfaceLineEnabled || !buffer || !overlayCanvasRef.current) {
+      // If disabled, clear the overlay
+      if (!params.surfaceLineEnabled) resetLines();
+      return;
+    }
+
+    // Debounce to avoid recomputing during slider drag
+    if (lineDebounceRef.current) clearTimeout(lineDebounceRef.current);
+    lineDebounceRef.current = setTimeout(() => {
+      if (overlayCanvasRef.current && buffer) {
+        startLineAnimation(overlayCanvasRef.current, buffer, params, mask ?? null);
+      }
+    }, 200);
+
+    return () => {
+      if (lineDebounceRef.current) clearTimeout(lineDebounceRef.current);
+    };
+  // Trigger on params that affect gap region or line appearance
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    params.surfaceLineEnabled,
+    params.surfaceLineCount,
+    params.surfaceLineStepDistance,
+    params.surfaceLineWidth,
+    params.surfaceLineGlow,
+    params.surfaceLineOpacity,
+    params.surfaceLineDuration,
+    params.cellSize,
+    params.spacing,
+    params.maskMode,
+    params.maskDilation,
+    buffer,
+    mask,
+    startLineAnimation,
+    resetLines,
+  ]);
+
+  // Cleanup surface lines on unmount
+  useEffect(() => cleanupLines, [cleanupLines]);
+
+  const handleReplayLines = useCallback(() => {
+    if (!buffer || !overlayCanvasRef.current || !params.surfaceLineEnabled) return;
+    startLineAnimation(overlayCanvasRef.current, buffer, params, mask ?? null);
+  }, [buffer, params, mask, startLineAnimation]);
 
   const handleParamChange = useCallback((partial: Partial<MosaicParams>) => {
     setParams(prev => ({ ...prev, ...partial }));
@@ -165,6 +223,7 @@ export default function MosaicToolPage() {
   }, [getVideoElement, buffer, exportResolution, exportQuality, params, mask, render, startExport]);
 
   // Smart export: PNG for images, video for videos
+  // PNG export already handles overlay compositing via MosaicCanvas.exportPNG
   const handleExport = useCallback(() => {
     if (mediaType === 'video') {
       handleExportVideo();
@@ -230,6 +289,7 @@ export default function MosaicToolPage() {
           subjectMask={mask}
           onCanvasClick={handleCanvasClick}
           clickPoints={points}
+          overlayCanvasRef={overlayCanvasRef}
         />
       </main>
 
@@ -248,6 +308,7 @@ export default function MosaicToolPage() {
         onUndoClick={removeLastPoint}
         onClearMask={clearMask}
         onInvertMask={invertMask}
+        onReplayLines={handleReplayLines}
         exportState={exportState}
         onExportVideo={handleExportVideo}
         onCancelExport={cancelExport}

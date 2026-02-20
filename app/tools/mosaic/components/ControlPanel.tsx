@@ -35,6 +35,8 @@ interface ControlPanelProps {
   onUndoClick?: () => void;
   onClearMask?: () => void;
   onInvertMask?: () => void;
+  // Surface line props
+  onReplayLines?: () => void;
   // Export props
   exportState?: ExportState;
   onExportVideo?: () => void;
@@ -144,6 +146,7 @@ export default function ControlPanel({
   onUndoClick,
   onClearMask,
   onInvertMask,
+  onReplayLines,
   exportState,
   onExportVideo,
   onCancelExport,
@@ -294,13 +297,19 @@ export default function ControlPanel({
             <span style={{ fontSize: 13, color: '#c4c7d0' }}>Background</span>
           </div>
           <div className="mosaic-bg-selector">
-            {(['black', 'white', 'transparent'] as BgMode[]).map(bg => (
+            {(['black', 'white', 'transparent', 'grid'] as BgMode[]).map(bg => (
               <button
                 key={bg}
                 className={`mosaic-bg-option bg-${bg} ${params.bgMode === bg ? 'active' : ''}`}
                 onClick={() => onChange({ bgMode: bg })}
                 title={bg}
                 disabled={isExporting}
+                style={bg === 'grid' ? {
+                  backgroundColor: '#f0e6d3',
+                  backgroundImage:
+                    'linear-gradient(rgba(80,60,30,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(80,60,30,0.15) 1px, transparent 1px)',
+                  backgroundSize: '8px 8px',
+                } : undefined}
               />
             ))}
           </div>
@@ -433,6 +442,17 @@ export default function ControlPanel({
                 {subjectMaskState.pointCount} click{subjectMaskState.pointCount !== 1 ? 's' : ''} placed
               </div>
             ) : null}
+
+            {/* Mask dilation for edge detail */}
+            <Slider
+              label="Edge Detail"
+              value={params.maskDilation}
+              min={0}
+              max={8}
+              onChange={v => onChange({ maskDilation: v })}
+              disabled={isExporting}
+              suffix="px"
+            />
           </div>
         )}
 
@@ -629,6 +649,84 @@ export default function ControlPanel({
             suffix="%"
             disabled={isExporting}
           />
+        )}
+      </div>
+
+      {/* Surface Line Fill */}
+      <div className="mosaic-section">
+        <div className="mosaic-section-title">Surface Line Fill</div>
+        <Toggle
+          label="Enable Surface Lines"
+          checked={params.surfaceLineEnabled}
+          onChange={v => onChange({ surfaceLineEnabled: v })}
+          disabled={isExporting}
+        />
+        {params.surfaceLineEnabled && (
+          <>
+            <Slider
+              label="Line Count"
+              value={params.surfaceLineCount}
+              min={30}
+              max={150}
+              onChange={v => onChange({ surfaceLineCount: v })}
+              disabled={isExporting}
+            />
+            <Slider
+              label="Step Distance"
+              value={params.surfaceLineStepDistance}
+              min={1}
+              max={6}
+              onChange={v => onChange({ surfaceLineStepDistance: v })}
+              suffix="px"
+              disabled={isExporting}
+            />
+            <Slider
+              label="Line Width"
+              value={params.surfaceLineWidth}
+              min={0.5}
+              max={3}
+              step={0.1}
+              onChange={v => onChange({ surfaceLineWidth: v })}
+              suffix="px"
+              disabled={isExporting}
+            />
+            <Slider
+              label="Glow"
+              value={Math.round(params.surfaceLineGlow * 100)}
+              min={0}
+              max={100}
+              onChange={v => onChange({ surfaceLineGlow: v / 100 })}
+              suffix="%"
+              disabled={isExporting}
+            />
+            <Slider
+              label="Opacity"
+              value={Math.round(params.surfaceLineOpacity * 100)}
+              min={10}
+              max={100}
+              onChange={v => onChange({ surfaceLineOpacity: v / 100 })}
+              suffix="%"
+              disabled={isExporting}
+            />
+            <Slider
+              label="Animation Speed"
+              value={params.surfaceLineDuration}
+              min={500}
+              max={5000}
+              step={100}
+              onChange={v => onChange({ surfaceLineDuration: v })}
+              suffix="ms"
+              disabled={isExporting}
+            />
+            <button
+              className="mosaic-mask-btn"
+              onClick={onReplayLines}
+              disabled={isExporting}
+              style={{ marginTop: 8, width: '100%' }}
+            >
+              Replay Animation
+            </button>
+          </>
         )}
       </div>
 
