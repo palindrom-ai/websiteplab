@@ -2,6 +2,9 @@
 const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: ['onnxruntime-node'],
+    outputFileTracingExcludes: {
+      '*': ['./node_modules/onnxruntime-node/**'],
+    },
   },
   webpack: (config, { isServer, dev }) => {
     if (!isServer) {
