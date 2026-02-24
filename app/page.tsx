@@ -36,6 +36,7 @@ export default function Home() {
   const [activeTestimonial, setActiveTestimonial] = useState(0)
   const [introComplete, setIntroComplete] = useState(false)
   const [comparisonInView, setComparisonInView] = useState(false)
+  const [bootTime, setBootTime] = useState('')
   const comparisonRef = useRef<HTMLDivElement>(null)
 
   // Service tile pixel reveal refs
@@ -76,6 +77,33 @@ export default function Home() {
     setIntroComplete(true)
   }, [])
 
+  // Live clock for hero boot data
+  useEffect(() => {
+    const tick = () => {
+      const now = new Date()
+      const time = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Europe/London' })
+      const date = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Europe/London' }).toUpperCase()
+      setBootTime(`${time} GMT — ${date}`)
+    }
+    tick()
+    const interval = setInterval(tick, 1000)
+    return () => clearInterval(interval)
+  }, [])
+
+  // System boot — synchronized clip-path wipe after intro completes
+  useEffect(() => {
+    if (!introComplete) return
+    const initBoot = async () => {
+      const gsap = (await import('gsap')).default
+      gsap.to('.global-sync-reveal', {
+        clipPath: 'inset(0 0% 0 0)',
+        duration: 0.8,
+        ease: 'power3.inOut',
+      })
+    }
+    initBoot()
+  }, [introComplete])
+
   // Track scroll position for nav styling
   useEffect(() => {
     const handleScroll = () => {
@@ -99,28 +127,11 @@ export default function Home() {
         duration: 0.8
       })
 
-      // Hero animations
-      const heroTimeline = gsap.timeline({ delay: 0.2 })
-      heroTimeline
-        .fromTo('.hero-dark-title',
-          { opacity: 0, y: 40 },
-          { opacity: 1, y: 0, duration: 1, ease: 'power3.out' }
-        )
-        .fromTo('.hero-dark-subtitle',
-          { opacity: 0, y: 30 },
-          { opacity: 1, y: 0, duration: 0.8 },
-          '-=0.5'
-        )
-        .fromTo('.hero-dark-actions',
-          { opacity: 0, y: 20 },
-          { opacity: 1, y: 0, duration: 0.6 },
-          '-=0.4'
-        )
-        .fromTo('.hero-image',
-          { opacity: 0, scale: 0.95 },
-          { opacity: 1, scale: 1, duration: 1.2, ease: 'back.out(1.2)' },
-          '-=0.8'
-        )
+      // Hero image — subtle scale-in (text is handled by boot wipe)
+      gsap.fromTo('.hero-image',
+        { opacity: 0, scale: 0.95 },
+        { opacity: 1, scale: 1, duration: 1.2, delay: 0.3, ease: 'back.out(1.2)' }
+      )
 
       // Fade up animations — bouncy easing
       const fadeUpElements = document.querySelectorAll('.fade-up:not(.hero-title):not(.hero-subtitle):not(.hero-actions)')
@@ -622,12 +633,12 @@ export default function Home() {
       {/* Navigation */}
       <nav className={`nav nav-black ${introComplete ? 'intro-visible' : 'intro-hidden'}`} id="nav">
         <div className="nav-container">
-          <a href="/" className="nav-logo" aria-label="Progression Labs home">
+          <a href="/" className="nav-logo global-sync-reveal" aria-label="Progression Labs home">
             <Image src="/logo-white.png" alt="Progression Labs" className="nav-logo-img" width={42} height={28} />
             <span className="nav-wordmark">Progression Labs</span>
           </a>
 
-          <div className="nav-links">
+          <div className="nav-links global-sync-reveal">
             <a href="#hero">Home</a>
             <a href="#services">Services</a>
             <a href="#case-studies">Case Studies</a>
@@ -656,7 +667,7 @@ export default function Home() {
       </div>
 
       {/* Announcement Bar */}
-      <div className="announcement-bar">
+      <div className="announcement-bar global-sync-reveal">
         <div className="announcement-bar-content">
           <span className="announcement-bar-text">New: AI Agent Platform now available for enterprise</span>
           <a href="#contact" className="announcement-bar-link">Learn more &rarr;</a>
@@ -667,9 +678,9 @@ export default function Home() {
       <section className="hero-fullscreen" id="hero">
         <div className="hero-fullscreen-inner">
           <div className={`hero-fullscreen-content ${introComplete ? 'intro-visible' : 'intro-hidden'}`}>
-            <TextScramble as="h1" className="hero-dark-title" trigger={introComplete} duration={3.2} speed={0.025} characterSet="ABCDEFGHIJKLMNOPQRSTUVWXYZ" style={{ textTransform: 'uppercase' as const }}>Turn your company a leader in the age of AI</TextScramble>
-            <p className="hero-dark-subtitle">We&#39;re a frontier AI-native engineering partner that helps companies in complex industries lead the next decade.</p>
-            <div className="hero-dark-actions">
+            <TextScramble as="h1" className="hero-dark-title global-sync-reveal" trigger={introComplete} duration={3.2} speed={0.025} characterSet="ABCDEFGHIJKLMNOPQRSTUVWXYZ" style={{ textTransform: 'uppercase' as const }}>Turn your company a leader in the age of AI</TextScramble>
+            <p className="hero-dark-subtitle global-sync-reveal">We&#39;re a frontier AI-native engineering partner that helps companies in complex industries lead the next decade.</p>
+            <div className="hero-dark-actions global-sync-reveal">
               <a href="#contact" className="btn btn-dark">Request a brainstorm</a>
             </div>
           </div>
@@ -677,6 +688,10 @@ export default function Home() {
             {/* Flower video is rendered by IntroAnimation canvas overlay */}
             <div style={{ width: '100%', height: '100%' }} />
           </div>
+        </div>
+        {/* Boot data — bottom right */}
+        <div className="hero-boot-data global-sync-reveal">
+          {bootTime}
         </div>
       </section>
 
