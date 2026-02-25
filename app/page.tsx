@@ -5,7 +5,6 @@ import Image from 'next/image'
 import IntroAnimation from './components/IntroAnimation'
 // AsciiVideoCanvas now integrated into IntroAnimation for seamless P logo -> flower transition
 import TeamGrid from './components/TeamGrid'
-import ServiceIcon from './components/AsciiIcon'
 import GlitchImage, { type GlitchImageHandle } from './components/GlitchImage'
 import TerminalText from './components/TerminalText'
 import NavPixelWhip from './components/NavPixelWhip'
@@ -36,6 +35,7 @@ export default function Home() {
   const [scrolledPastHero, setScrolledPastHero] = useState(false)
   const [activeTestimonial, setActiveTestimonial] = useState(0)
   const [introComplete, setIntroComplete] = useState(false)
+  const [aboutInView, setAboutInView] = useState(false)
   const [comparisonInView, setComparisonInView] = useState(false)
   const [servicesInView, setServicesInView] = useState(false)
   const [caseStudiesInView, setCaseStudiesInView] = useState(false)
@@ -44,6 +44,7 @@ export default function Home() {
   const [ctaInView, setCtaInView] = useState(false)
   const [bootTime, setBootTime] = useState('')
   const [activeSection, setActiveSection] = useState('hero')
+  const aboutRef = useRef<HTMLDivElement>(null)
   const comparisonRef = useRef<HTMLDivElement>(null)
   const servicesRef = useRef<HTMLDivElement>(null)
   const caseStudiesRef = useRef<HTMLDivElement>(null)
@@ -75,6 +76,7 @@ export default function Home() {
   // Trigger terminal scrambles when sections scroll into view (fire once)
   useEffect(() => {
     const sections: [React.RefObject<HTMLDivElement | null>, (v: boolean) => void][] = [
+      [aboutRef, setAboutInView],
       [comparisonRef, setComparisonInView],
       [servicesRef, setServicesInView],
       [caseStudiesRef, setCaseStudiesInView],
@@ -139,7 +141,7 @@ export default function Home() {
 
   // Track scroll position for nav styling + active section
   useEffect(() => {
-    const sectionIds = ['blog', 'team', 'case-studies', 'services', 'comparison', 'hero']
+    const sectionIds = ['blog', 'team', 'case-studies', 'services', 'comparison', 'about', 'hero']
     const handleScroll = () => {
       const heroHeight = window.innerHeight
       setScrolledPastHero(window.scrollY > heroHeight - 100)
@@ -243,27 +245,27 @@ export default function Home() {
               start: 'top 85%',
               toggleActions: 'play none none none'
             },
-            delay: i * 0.15
+            delay: i * 0.18
           })
 
           // 1. Fade tile in
           tl.fromTo(tile,
             { opacity: 0, y: 12 },
-            { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' },
+            { opacity: 1, y: 0, duration: 0.7, ease: 'power3.inOut' },
             0
           )
 
           // 2. L-shaped scan bar — Phase 1: horizontal across top edge
           if (scanBar) {
-            tl.set(scanBar, { top: 0, left: '0%', right: 'auto', width: 3, height: 3, opacity: 1 }, 0.2)
-            tl.to(scanBar, { left: '100%', duration: 0.6, ease: 'power2.inOut' }, 0.2)
+            tl.set(scanBar, { top: 0, left: '0%', right: 'auto', width: 3, height: 3, opacity: 1 }, 0.25)
+            tl.to(scanBar, { left: '100%', duration: 0.55, ease: 'power3.inOut' }, 0.25)
 
             // Phase 2: snap to right edge, drop vertical
             tl.set(scanBar, { left: 'auto', right: 0, top: '0%', width: 3, height: 0 }, 0.8)
-            tl.to(scanBar, { height: '100%', duration: 0.6, ease: 'power2.inOut' }, 0.8)
+            tl.to(scanBar, { height: '100%', duration: 0.55, ease: 'power3.inOut' }, 0.8)
 
             // Fade out after L-path completes
-            tl.to(scanBar, { opacity: 0, duration: 0.2 }, 1.35)
+            tl.to(scanBar, { opacity: 0, duration: 0.2 }, 1.3)
           }
 
           // 3. Pixel reveal fires AFTER scan bar completes
@@ -271,7 +273,7 @@ export default function Home() {
             tl.fromTo(glitchHandle, { progress: 0 }, {
               progress: 1,
               duration: 1.2,
-              ease: 'power2.inOut'
+              ease: 'power3.inOut'
             }, 1.2)
           }
 
@@ -531,49 +533,7 @@ export default function Home() {
         })
       }
 
-      // === Team Grid — L-shaped scan bar + Pixel Dissolve Reveal ===
-      const teamCards = document.querySelectorAll('.team-card')
-      teamCards.forEach((card, i) => {
-        const blocks = card.querySelectorAll('.pixel-block')
-        const scanEdge = card.querySelector('.team-card-scan-edge') as HTMLElement
-
-        const tl = gsap.timeline({
-          scrollTrigger: {
-            trigger: card,
-            start: 'top 85%',
-            toggleActions: 'play none none none'
-          },
-          delay: i * 0.2
-        })
-
-        // 1. Fade card in
-        tl.fromTo(card,
-          { opacity: 0, y: 12 },
-          { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' },
-          0
-        )
-
-        // 2. L-shaped scan bar — Phase 1: horizontal across top edge
-        if (scanEdge) {
-          tl.set(scanEdge, { top: 0, left: '0%', right: 'auto', width: 3, height: 3, opacity: 1 }, 0.2)
-          tl.to(scanEdge, { left: '100%', duration: 0.5, ease: 'power2.inOut' }, 0.2)
-
-          // Phase 2: snap to right edge, drop vertical
-          tl.set(scanEdge, { left: 'auto', right: 0, top: '0%', width: 3, height: 0 }, 0.7)
-          tl.to(scanEdge, { height: '100%', duration: 0.5, ease: 'power2.inOut' }, 0.7)
-
-          // Fade out after L-path completes
-          tl.to(scanEdge, { opacity: 0, duration: 0.15 }, 1.15)
-        }
-
-        // 3. Pixel dissolve — fires AFTER scan bar completes
-        tl.to(blocks, {
-          opacity: 0,
-          duration: 0.015,
-          stagger: 1.0 / blocks.length,
-          ease: 'none'
-        }, 1.0)
-      })
+      // Team grid animation is now self-contained in TeamGrid component
 
       // Resource cards stagger
       const resourceCards = document.querySelectorAll('.resource-card')
@@ -703,6 +663,7 @@ export default function Home() {
 
           <div className="nav-links global-sync-reveal" style={{ clipPath: 'inset(0 100% 0 0)' }}>
             <a href="#hero" className={activeSection === 'hero' ? 'nav-active' : ''}><TerminalText trigger={introComplete} duration={500}>Home</TerminalText><NavPixelWhip /></a>
+            <a href="#about" className={activeSection === 'about' ? 'nav-active' : ''}><TerminalText trigger={introComplete} duration={500} delay={50}>About</TerminalText><NavPixelWhip /></a>
             <a href="#services" className={activeSection === 'services' || activeSection === 'comparison' ? 'nav-active' : ''}><TerminalText trigger={introComplete} duration={500} delay={100}>Services</TerminalText><NavPixelWhip /></a>
             <a href="#case-studies" className={activeSection === 'case-studies' ? 'nav-active' : ''}><TerminalText trigger={introComplete} duration={500} delay={200}>Case Studies</TerminalText><NavPixelWhip /></a>
             <a href="#team" className={activeSection === 'team' ? 'nav-active' : ''}><TerminalText trigger={introComplete} duration={500} delay={350}>Team</TerminalText><NavPixelWhip /></a>
@@ -723,6 +684,7 @@ export default function Home() {
       {/* Mobile menu */}
       <div className={`mobile-menu ${mobileMenuOpen ? 'active' : ''}`} id="mobile-menu">
         <a href="#hero" onClick={closeMobileMenu}>Home</a>
+        <a href="#about" onClick={closeMobileMenu}>About</a>
         <a href="#services" onClick={closeMobileMenu}>Services</a>
         <a href="#case-studies" onClick={closeMobileMenu}>Case Studies</a>
         <a href="#team" onClick={closeMobileMenu}>Team</a>
@@ -759,6 +721,18 @@ export default function Home() {
         {/* Boot data — bottom right */}
         <div className="hero-boot-data global-sync-reveal" style={{ clipPath: 'inset(0 100% 0 0)' }}>
           {bootTime}
+        </div>
+      </section>
+
+      {/* About Us */}
+      <section className="section" id="about" style={{ background: 'var(--bg-warm)' }}>
+        <div className="container">
+          <div ref={aboutRef} className="section-header section-title-reveal">
+            <TerminalText as="h2" trigger={aboutInView} duration={900}>About Us</TerminalText>
+          </div>
+          <div className="about-content">
+            <p className="about-placeholder">Content coming soon — Joe will fill this in.</p>
+          </div>
         </div>
       </section>
 
@@ -969,12 +943,12 @@ export default function Home() {
 
             <div className="services-grid-3col">
               {[
-                { icon: 'expert' as const, num: '01', title: 'AI Expert', desc: 'On-demand access to senior AI engineers and strategists. We embed within your team to architect, build, and ship production AI — from LLM fine-tuning to agent orchestration.' },
-                { icon: 'builds' as const, num: '02', title: 'AI Builds', desc: 'Full-stack AI product development from zero to production. Custom models, data pipelines, APIs, and interfaces — delivered as working software with ongoing support.' },
-                { icon: 'transform' as const, num: '03', title: 'AI Transformation', desc: 'Strategic advisory for enterprise AI adoption. We assess, plan, and guide your organization through digital transformation — from roadmapping to change management.' },
-                { icon: 'audit' as const, num: '04', title: 'AI Audit', desc: 'Deep-dive assessment of your AI readiness, current systems, and opportunities. We identify gaps, risks, and quick wins — delivering a prioritised roadmap in weeks, not months.' },
-                { icon: 'surgery' as const, num: '05', title: 'Project Surgery', desc: 'When AI projects stall, we diagnose and fix. Our team parachutes in to rescue troubled implementations — refactoring models, fixing pipelines, and getting your project back on track.' },
-                { icon: 'ideation' as const, num: '06', title: 'Ideation Sessions', desc: 'Structured workshops that turn business challenges into AI-powered solutions. We facilitate brainstorms with your team, prototype concepts live, and leave you with a concrete action plan.' },
+                { num: '01', title: 'AI Expert', desc: 'On-demand access to senior AI engineers and strategists. We embed within your team to architect, build, and ship production AI — from LLM fine-tuning to agent orchestration.' },
+                { num: '02', title: 'AI Builds', desc: 'Full-stack AI product development from zero to production. Custom models, data pipelines, APIs, and interfaces — delivered as working software with ongoing support.' },
+                { num: '03', title: 'AI Transformation', desc: 'Strategic advisory for enterprise AI adoption. We assess, plan, and guide your organization through digital transformation — from roadmapping to change management.' },
+                { num: '04', title: 'AI Audit', desc: 'Deep-dive assessment of your AI readiness, current systems, and opportunities. We identify gaps, risks, and quick wins — delivering a prioritised roadmap in weeks, not months.' },
+                { num: '05', title: 'Project Surgery', desc: 'When AI projects stall, we diagnose and fix. Our team parachutes in to rescue troubled implementations — refactoring models, fixing pipelines, and getting your project back on track.' },
+                { num: '06', title: 'Ideation Sessions', desc: 'Structured workshops that turn business challenges into AI-powered solutions. We facilitate brainstorms with your team, prototype concepts live, and leave you with a concrete action plan.' },
               ].map((service, i) => (
                 <div
                   key={service.num}
@@ -990,7 +964,6 @@ export default function Home() {
                   </div>
                   <div className="service-tile-content">
                     <div className="service-tile-text">
-                      <ServiceIcon icon={service.icon} className="service-icon-slot" />
                       <span className="service-number">{service.num}</span>
                       <TerminalText as="h3" trigger={servicesInView} duration={700}>{service.title}</TerminalText>
                       <TerminalText as="p" trigger={servicesInView} duration={800}>{service.desc}</TerminalText>
@@ -1127,7 +1100,7 @@ export default function Home() {
             <p>Whether you need strategic business consultancy, a managed AI platform, or custom technology solutions — our team of experts is ready to help you build AI systems that deliver real results.</p>
             <a href="mailto:hello@progressionlabs.com" className="cta-email">hello@progressionlabs.com</a>
             <div className="cta-actions" style={{ marginTop: '16px' }}>
-              <a href="#" className="btn btn-primary btn-lg">Schedule a consultation</a>
+              <a href="#" className="btn btn-primary btn-lg">Request a brainstorm</a>
               <a href="#" className="btn btn-ghost btn-lg">Request a demo</a>
             </div>
           </div>
@@ -1142,7 +1115,14 @@ export default function Home() {
               <Image src="/logo-white.png" alt="Progression Labs" className="footer-logo-img" width={36} height={24} />
               <div className="footer-brand-name">Progression Labs</div>
               <p className="footer-brand-desc">AI consultancy and technology partner. We build production-ready artificial intelligence systems, provide strategic business advisory, and operate managed AI platforms for enterprise clients.</p>
-              <a href="https://twitter.com/WeAreProgression" className="footer-social-handle" target="_blank" rel="noopener noreferrer">@WeAreProgression</a>
+              <div className="footer-social-links">
+                <a href="https://twitter.com/WeAreProgression" className="footer-social-link" target="_blank" rel="noopener noreferrer" aria-label="Follow us on X">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                </a>
+                <a href="https://www.linkedin.com/company/progressionlabs" className="footer-social-link" target="_blank" rel="noopener noreferrer" aria-label="Follow us on LinkedIn">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                </a>
+              </div>
               <div className="footer-wap-tagline">WeAreProgression&trade; — Where strategy meets intelligence.</div>
             </div>
 
