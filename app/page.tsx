@@ -738,7 +738,7 @@ export default function Home() {
         </div>
         {/* Boot data — bottom right */}
         <div className="hero-boot-data global-sync-reveal">
-          <TerminalText trigger={introComplete} duration={800}>{bootTime}</TerminalText>
+          {bootTime}
         </div>
       </section>
 
