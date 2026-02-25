@@ -155,7 +155,7 @@ export default function Home() {
         { opacity: 1, scale: 1, duration: 1.2, delay: 0.3, ease: 'back.out(1.2)' }
       )
 
-      // Fade up animations — bouncy easing
+      // Fade up animations — bouncy easing, play once only
       const fadeUpElements = document.querySelectorAll('.fade-up:not(.hero-title):not(.hero-subtitle):not(.hero-actions)')
       fadeUpElements.forEach((el) => {
         gsap.fromTo(el,
@@ -168,13 +168,13 @@ export default function Home() {
             scrollTrigger: {
               trigger: el,
               start: 'top 85%',
-              toggleActions: 'play none none none'
+              once: true
             }
           }
         )
       })
 
-      // Section titles — clip-path wipe (same feel as hero boot)
+      // Section titles — clip-path wipe (same feel as hero boot), play once
       document.querySelectorAll('.section-title-reveal').forEach((el) => {
         gsap.fromTo(el,
           { clipPath: 'inset(0 100% 0 0)' },
@@ -185,13 +185,13 @@ export default function Home() {
             scrollTrigger: {
               trigger: el,
               start: 'top 85%',
-              toggleActions: 'play none none none'
+              once: true
             }
           }
         )
       })
 
-      // Fade in animations
+      // Fade in animations, play once
       document.querySelectorAll('.fade-in').forEach((el) => {
         gsap.fromTo(el,
           { opacity: 0 },
@@ -201,7 +201,7 @@ export default function Home() {
             scrollTrigger: {
               trigger: el,
               start: 'top 85%',
-              toggleActions: 'play none none none'
+              once: true
             }
           }
         )
@@ -219,7 +219,7 @@ export default function Home() {
             scrollTrigger: {
               trigger: tile,
               start: 'top 85%',
-              toggleActions: 'play none none none'
+              once: true
             },
             delay: i * 0.15
           })
@@ -277,7 +277,7 @@ export default function Home() {
             scrollTrigger: {
               trigger: el,
               start: 'top 85%',
-              toggleActions: 'play none none none'
+              once: true
             }
           }
         )
@@ -294,7 +294,7 @@ export default function Home() {
             scrollTrigger: {
               trigger: el,
               start: 'top 85%',
-              toggleActions: 'play none none none'
+              once: true
             }
           }
         )
@@ -307,7 +307,7 @@ export default function Home() {
           scrollTrigger: {
             trigger: comparisonSection,
             start: 'top 65%',
-            toggleActions: 'play none none none'
+            once: true
           }
         })
 
@@ -519,7 +519,7 @@ export default function Home() {
           scrollTrigger: {
             trigger: card,
             start: 'top 85%',
-            toggleActions: 'play none none none'
+            once: true
           },
           delay: i * 0.2
         })
@@ -567,7 +567,7 @@ export default function Home() {
             scrollTrigger: {
               trigger: resourceCards[0],
               start: 'top 85%',
-              toggleActions: 'play none none none'
+              once: true
             }
           }
         )
