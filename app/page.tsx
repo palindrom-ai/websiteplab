@@ -8,6 +8,7 @@ import TeamGrid from './components/TeamGrid'
 import ServiceIcon from './components/AsciiIcon'
 import GlitchImage, { type GlitchImageHandle } from './components/GlitchImage'
 import TerminalText from './components/TerminalText'
+import NavPixelWhip from './components/NavPixelWhip'
 
 const testimonials = [
   {
@@ -698,11 +699,11 @@ export default function Home() {
           </a>
 
           <div className="nav-links global-sync-reveal">
-            <a href="#hero" className={activeSection === 'hero' ? 'nav-active' : ''}><TerminalText trigger={introComplete} duration={700}>Home</TerminalText></a>
-            <a href="#services" className={activeSection === 'services' || activeSection === 'comparison' ? 'nav-active' : ''}><TerminalText trigger={introComplete} duration={700}>Services</TerminalText></a>
-            <a href="#case-studies" className={activeSection === 'case-studies' ? 'nav-active' : ''}><TerminalText trigger={introComplete} duration={700}>Case Studies</TerminalText></a>
-            <a href="#team" className={activeSection === 'team' ? 'nav-active' : ''}><TerminalText trigger={introComplete} duration={700}>Team</TerminalText></a>
-            <a href="#blog" className={activeSection === 'blog' ? 'nav-active' : ''}><TerminalText trigger={introComplete} duration={700}>Blog</TerminalText></a>
+            <a href="#hero" className={activeSection === 'hero' ? 'nav-active' : ''}><TerminalText trigger={introComplete} duration={700}>Home</TerminalText><NavPixelWhip /></a>
+            <a href="#services" className={activeSection === 'services' || activeSection === 'comparison' ? 'nav-active' : ''}><TerminalText trigger={introComplete} duration={700}>Services</TerminalText><NavPixelWhip /></a>
+            <a href="#case-studies" className={activeSection === 'case-studies' ? 'nav-active' : ''}><TerminalText trigger={introComplete} duration={700}>Case Studies</TerminalText><NavPixelWhip /></a>
+            <a href="#team" className={activeSection === 'team' ? 'nav-active' : ''}><TerminalText trigger={introComplete} duration={700}>Team</TerminalText><NavPixelWhip /></a>
+            <a href="#blog" className={activeSection === 'blog' ? 'nav-active' : ''}><TerminalText trigger={introComplete} duration={700}>Blog</TerminalText><NavPixelWhip /></a>
           </div>
 
           <div className="nav-actions">
