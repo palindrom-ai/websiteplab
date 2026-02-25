@@ -872,6 +872,8 @@ p {
   display: flex;
   align-items: center;
   gap: 32px;
+  padding-bottom: 10px;
+  margin-bottom: -10px;
 }
 
 .nav-links a {
@@ -898,6 +900,7 @@ p {
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 0.4s steps(10, end);
+  z-index: 2;
 }
 
 .nav-links a:hover {
