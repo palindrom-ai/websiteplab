@@ -86,7 +86,7 @@ export default function Home() {
       if (!el) return
       const obs = new IntersectionObserver(
         ([entry]) => { if (entry.isIntersecting) { setter(true); obs.disconnect() } },
-        { threshold: 0.2 }
+        { threshold: 0.05 }
       )
       obs.observe(el)
       observers.push(obs)
@@ -165,6 +165,23 @@ export default function Home() {
             y: 0,
             duration: 1,
             ease: 'back.out(1.2)',
+            scrollTrigger: {
+              trigger: el,
+              start: 'top 85%',
+              toggleActions: 'play none none none'
+            }
+          }
+        )
+      })
+
+      // Section titles — clip-path wipe (same feel as hero boot)
+      document.querySelectorAll('.section-title-reveal').forEach((el) => {
+        gsap.fromTo(el,
+          { clipPath: 'inset(0 100% 0 0)' },
+          {
+            clipPath: 'inset(0 0% 0 0)',
+            duration: 0.8,
+            ease: 'power3.inOut',
             scrollTrigger: {
               trigger: el,
               start: 'top 85%',
@@ -721,7 +738,7 @@ export default function Home() {
       <section className="section grid-section" id="comparison">
         <div className="grid-container">
         <div className="container">
-          <div ref={comparisonRef} className={`section-header scroll-sync-reveal${comparisonInView ? ' revealed' : ''}`} style={{ textAlign: 'center', maxWidth: '600px', margin: '0 auto 60px' }}>
+          <div ref={comparisonRef} className="section-header section-title-reveal" style={{ textAlign: 'center', maxWidth: '600px', margin: '0 auto 60px' }}>
             <TerminalText as="h2" trigger={comparisonInView} duration={900} style={{ textTransform: 'uppercase' as const }}>We Rebuilt Consulting From Scratch</TerminalText>
           </div>
 
@@ -918,7 +935,7 @@ export default function Home() {
       <section className="section grid-section" id="services">
         <div className="grid-container">
           <div className="container">
-            <div ref={servicesRef} className={`section-header scroll-sync-reveal${servicesInView ? ' revealed' : ''}`} style={{ textAlign: 'center', maxWidth: '700px', margin: '0 auto 60px' }}>
+            <div ref={servicesRef} className="section-header section-title-reveal" style={{ textAlign: 'center', maxWidth: '700px', margin: '0 auto 60px' }}>
               <TerminalText as="h2" trigger={servicesInView} duration={900}>Wherever you are with AI, we meet you there</TerminalText>
             </div>
 
@@ -963,7 +980,7 @@ export default function Home() {
       {/* Case Studies */}
       <section className="section section-offwhite" id="case-studies">
         <div className="container">
-          <div ref={caseStudiesRef} className={`section-header scroll-sync-reveal${caseStudiesInView ? ' revealed' : ''}`} style={{ textAlign: 'center', maxWidth: '600px', marginLeft: 'auto', marginRight: 'auto' }}>
+          <div ref={caseStudiesRef} className="section-header section-title-reveal" style={{ textAlign: 'center', maxWidth: '600px', marginLeft: 'auto', marginRight: 'auto' }}>
             <TerminalText as="h2" trigger={caseStudiesInView} duration={900}>What our clients say</TerminalText>
           </div>
 
@@ -1036,7 +1053,7 @@ export default function Home() {
       {/* Team */}
       <section className="section" id="team" style={{ background: 'var(--bg-warm)' }}>
         <div className="container">
-          <div ref={teamRef} className={`section-header scroll-sync-reveal${teamInView ? ' revealed' : ''}`}>
+          <div ref={teamRef} className="section-header section-title-reveal">
             <TerminalText as="h2" trigger={teamInView} duration={900}>The people behind Progression Labs</TerminalText>
             <TerminalText as="p" className="team-section-subtitle" trigger={teamInView} duration={800}>A lean team of senior engineers, researchers, and strategists.</TerminalText>
           </div>
@@ -1047,7 +1064,7 @@ export default function Home() {
       {/* Blog */}
       <section className="section section-offwhite" id="blog">
         <div className="container">
-          <div ref={blogRef} className={`section-header scroll-sync-reveal${blogInView ? ' revealed' : ''}`}>
+          <div ref={blogRef} className="section-header section-title-reveal">
             <TerminalText as="h2" trigger={blogInView} duration={900}>Latest thinking from our team</TerminalText>
           </div>
 
@@ -1076,7 +1093,7 @@ export default function Home() {
       {/* CTA */}
       <section className="section cta-section" id="contact">
         <div className="container">
-          <div ref={ctaRef} className={`scroll-sync-reveal${ctaInView ? ' revealed' : ''}`}>
+          <div ref={ctaRef} className="section-title-reveal">
             <TerminalText as="h2" trigger={ctaInView} duration={900}>Ready to transform your business with AI?</TerminalText>
             <p>Whether you need strategic business consultancy, a managed AI platform, or custom technology solutions — our team of experts is ready to help you build AI systems that deliver real results.</p>
             <a href="mailto:hello@progressionlabs.com" className="cta-email">hello@progressionlabs.com</a>
