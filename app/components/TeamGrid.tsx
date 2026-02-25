@@ -1,15 +1,20 @@
 'use client'
 
+import { useState, useEffect, useRef, useCallback } from 'react'
+
 const teamMembers = [
-  { name: 'Gabor Soter', role: 'CEO & Co-founder', gradient: 'linear-gradient(135deg, #0ea5e9, #06b6d4)', imageUrl: '/team/gabor-soter.jpg' },
-  { name: 'Joe O\'Meara', role: 'CTO & Co-founder', gradient: 'linear-gradient(135deg, #8b5cf6, #ec4899)', imageUrl: '/team/joe-omeara.jpg' },
-  { name: 'Elena Vasquez', role: 'Senior AI Engineer', gradient: 'linear-gradient(135deg, #14b8a6, #10b981)', imageUrl: '/team/elena-vasquez.jpg' },
-  { name: 'Marcus Chen', role: 'Head of Product', gradient: 'linear-gradient(135deg, #f59e0b, #ef4444)', imageUrl: '/team/marcus-chen.jpg' },
-  { name: 'Sarah Okafor', role: 'ML Research Lead', gradient: 'linear-gradient(135deg, #6366f1, #8b5cf6)', imageUrl: '/team/sarah-okafor.jpg' },
-  { name: 'David Kim', role: 'Senior Platform Engineer', gradient: 'linear-gradient(135deg, #0ea5e9, #3b82f6)', imageUrl: '/team/david-kim.jpg' },
-  { name: 'Anna Kowalski', role: 'AI Solutions Architect', gradient: 'linear-gradient(135deg, #ec4899, #f43f5e)', imageUrl: '/team/anna-kowalski.jpg' },
-  { name: 'James Mwangi', role: 'Data Engineering Lead', gradient: 'linear-gradient(135deg, #14b8a6, #0ea5e9)', imageUrl: '/team/james-mwangi.jpg' },
+  { name: 'Gabor Soter', role: 'Founder & CEO', gradient: 'linear-gradient(135deg, #0ea5e9, #06b6d4)', imageUrl: '/team/gabor-soter.jpg' },
+  { name: 'Sam Bourton', role: 'Head of Product', gradient: 'linear-gradient(135deg, #8b5cf6, #ec4899)', imageUrl: '/team/sam-bourton.jpg' },
+  { name: 'Endre Sagi', role: 'Head of Finance', gradient: 'linear-gradient(135deg, #14b8a6, #10b981)', imageUrl: '/team/endre-sagi.jpg' },
+  { name: 'Jon Duffy', role: 'Head of Engineering', gradient: 'linear-gradient(135deg, #f59e0b, #ef4444)', imageUrl: '/team/jon-duffy.jpg' },
+  { name: 'Joe O\'Meara', role: 'Associate', gradient: 'linear-gradient(135deg, #6366f1, #8b5cf6)', imageUrl: '/team/joe-omeara.jpg' },
+  { name: 'Conrad Guest', role: 'Senior Engineer', gradient: 'linear-gradient(135deg, #0ea5e9, #3b82f6)', imageUrl: '/team/conrad-guest.jpg' },
+  { name: 'Chris Little', role: 'Senior Engineer', gradient: 'linear-gradient(135deg, #ec4899, #f43f5e)', imageUrl: '/team/chris-little.jpg' },
+  { name: 'Talha Muhammad', role: 'Senior Engineer', gradient: 'linear-gradient(135deg, #14b8a6, #0ea5e9)', imageUrl: '/team/talha-muhammad.jpg' },
 ]
+
+const VISIBLE_COUNT = 4
+const TOTAL_PAGES = Math.ceil(teamMembers.length / VISIBLE_COUNT)
 
 function getInitials(name: string): string {
   return name.split(' ').map(n => n[0]).join('').toUpperCase()
@@ -17,25 +22,21 @@ function getInitials(name: string): string {
 
 const COLS = 8
 const ROWS = 10
-const TOTAL_BLOCKS = COLS * ROWS // 80
 
-// Simple integer hash for deterministic pseudo-random noise per block
 function hashNoise(col: number, row: number, cardIndex: number): number {
   let h = (cardIndex * 7919 + col * 131 + row * 524287) | 0
   h = ((h >> 16) ^ h) * 0x45d9f3b
   h = ((h >> 16) ^ h) * 0x45d9f3b
   h = (h >> 16) ^ h
-  return (h & 0x7fffffff) / 0x7fffffff // 0..1
+  return (h & 0x7fffffff) / 0x7fffffff
 }
 
-// Pre-compute sorted block indices per card so GSAP's sequential stagger
-// naturally produces the noisy L→R sweep.
 function buildSortedBlocks(cardIndex: number): { col: number; row: number; threshold: number }[] {
   const blocks: { col: number; row: number; threshold: number }[] = []
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
       const noise = hashNoise(c, r, cardIndex)
-      const wipe = c / (COLS - 1) // 0 at left, 1 at right
+      const wipe = c / (COLS - 1)
       const threshold = noise * 0.4 + wipe * 0.6
       blocks.push({ col: c, row: r, threshold })
     }
@@ -67,25 +68,117 @@ function PixelOverlay({ cardIndex }: { cardIndex: number }) {
 }
 
 export default function TeamGrid() {
+  const [page, setPage] = useState(0)
+  const gridRef = useRef<HTMLDivElement>(null)
+
+  const start = page * VISIBLE_COUNT
+  const visibleMembers = teamMembers.slice(start, start + VISIBLE_COUNT)
+
+  const goNext = useCallback(() => {
+    setPage(p => (p + 1) % TOTAL_PAGES)
+  }, [])
+
+  const goPrev = useCallback(() => {
+    setPage(p => (p - 1 + TOTAL_PAGES) % TOTAL_PAGES)
+  }, [])
+
+  // Self-contained GSAP animation — re-runs on page change
+  useEffect(() => {
+    const grid = gridRef.current
+    if (!grid) return
+
+    let timelines: unknown[] = []
+
+    const runAnimation = async () => {
+      const { default: gsap } = await import('gsap')
+
+      const cards = grid.querySelectorAll('.team-card')
+      cards.forEach((card, i) => {
+        const blocks = card.querySelectorAll('.pixel-block')
+        const scanEdge = card.querySelector('.team-card-scan-edge') as HTMLElement
+
+        const tl = gsap.timeline({ delay: i * 0.2 })
+        timelines.push(tl)
+
+        // 1. Fade card in
+        tl.fromTo(card,
+          { opacity: 0, y: 12 },
+          { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' },
+          0
+        )
+
+        // 2. L-shaped scan bar
+        if (scanEdge) {
+          tl.set(scanEdge, { top: 0, left: '0%', right: 'auto', width: 3, height: 3, opacity: 1 }, 0.2)
+          tl.to(scanEdge, { left: '100%', duration: 0.5, ease: 'power3.inOut' }, 0.2)
+          tl.set(scanEdge, { left: 'auto', right: 0, top: '0%', width: 3, height: 0 }, 0.7)
+          tl.to(scanEdge, { height: '100%', duration: 0.5, ease: 'power3.inOut' }, 0.7)
+          tl.to(scanEdge, { opacity: 0, duration: 0.15 }, 1.15)
+        }
+
+        // 3. Pixel dissolve
+        tl.to(blocks, {
+          opacity: 0,
+          duration: 0.015,
+          stagger: 1.0 / blocks.length,
+          ease: 'none'
+        }, 1.0)
+      })
+    }
+
+    runAnimation()
+
+    return () => {
+      timelines.forEach(tl => {
+        if (tl && typeof (tl as { kill: () => void }).kill === 'function') {
+          (tl as { kill: () => void }).kill()
+        }
+      })
+    }
+  }, [page])
+
   return (
-    <div className="team-grid">
-      {teamMembers.map((member, i) => (
-        <div className="team-card blueprint-box" key={i} style={{ opacity: 0 }}>
-          <div
-            className="team-avatar"
-            style={{ background: member.gradient }}
-          >
-            {member.imageUrl ? (
-              <img src={member.imageUrl} alt={member.name} className="team-card-image" />
-            ) : (
-              <span className="team-initials">{getInitials(member.name)}</span>
-            )}
+    <div className="team-carousel-wrapper">
+      <div className="team-grid" ref={gridRef} key={page}>
+        {visibleMembers.map((member, i) => (
+          <div className="team-card blueprint-box" key={start + i} style={{ opacity: 0 }}>
+            <div
+              className="team-avatar"
+              style={{ background: member.gradient }}
+            >
+              {member.imageUrl ? (
+                <img src={member.imageUrl} alt={member.name} className="team-card-image" />
+              ) : (
+                <span className="team-initials">{getInitials(member.name)}</span>
+              )}
+            </div>
+            <div className="team-card-name">{member.name}</div>
+            <div className="team-card-role">{member.role}</div>
+            <PixelOverlay cardIndex={start + i} />
           </div>
-          <div className="team-card-name">{member.name}</div>
-          <div className="team-card-role">{member.role}</div>
-          <PixelOverlay cardIndex={i} />
+        ))}
+      </div>
+
+      <div className="team-carousel-nav">
+        <button className="team-carousel-btn" onClick={goPrev} aria-label="Previous team members">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+
+        <div className="team-carousel-dots">
+          {Array.from({ length: TOTAL_PAGES }, (_, i) => (
+            <button
+              key={i}
+              className={`team-carousel-dot${i === page ? ' active' : ''}`}
+              onClick={() => setPage(i)}
+              aria-label={`Go to page ${i + 1}`}
+            />
+          ))}
         </div>
-      ))}
+
+        <button className="team-carousel-btn" onClick={goNext} aria-label="Next team members">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+      </div>
     </div>
   )
 }
