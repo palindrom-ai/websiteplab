@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import Image from 'next/image'
 import IntroAnimation from './components/IntroAnimation'
 // AsciiVideoCanvas now integrated into IntroAnimation for seamless P logo -> flower transition
-import { TextScramble } from '@/components/motion-primitives/text-scramble'
 import TeamGrid from './components/TeamGrid'
 import ServiceIcon from './components/AsciiIcon'
 import GlitchImage, { type GlitchImageHandle } from './components/GlitchImage'
@@ -722,8 +721,8 @@ export default function Home() {
       <section className="section grid-section" id="comparison">
         <div className="grid-container">
         <div className="container">
-          <div ref={comparisonRef} className="section-header fade-up" style={{ textAlign: 'center', maxWidth: '600px', margin: '0 auto 60px' }}>
-            <TextScramble as="h2" trigger={comparisonInView} duration={2} speed={0.025} characterSet="ABCDEFGHIJKLMNOPQRSTUVWXYZ" style={{ textTransform: 'uppercase' as const }}>We Rebuilt Consulting From Scratch</TextScramble>
+          <div ref={comparisonRef} className={`section-header scroll-sync-reveal${comparisonInView ? ' revealed' : ''}`} style={{ textAlign: 'center', maxWidth: '600px', margin: '0 auto 60px' }}>
+            <TerminalText as="h2" trigger={comparisonInView} duration={900} style={{ textTransform: 'uppercase' as const }}>We Rebuilt Consulting From Scratch</TerminalText>
           </div>
 
           <div className="comparison-grid">
@@ -919,7 +918,7 @@ export default function Home() {
       <section className="section grid-section" id="services">
         <div className="grid-container">
           <div className="container">
-            <div ref={servicesRef} className="section-header fade-up" style={{ textAlign: 'center', maxWidth: '700px', margin: '0 auto 60px' }}>
+            <div ref={servicesRef} className={`section-header scroll-sync-reveal${servicesInView ? ' revealed' : ''}`} style={{ textAlign: 'center', maxWidth: '700px', margin: '0 auto 60px' }}>
               <TerminalText as="h2" trigger={servicesInView} duration={900}>Wherever you are with AI, we meet you there</TerminalText>
             </div>
 
@@ -964,7 +963,7 @@ export default function Home() {
       {/* Case Studies */}
       <section className="section section-offwhite" id="case-studies">
         <div className="container">
-          <div ref={caseStudiesRef} className="section-header fade-up" style={{ textAlign: 'center', maxWidth: '600px', marginLeft: 'auto', marginRight: 'auto' }}>
+          <div ref={caseStudiesRef} className={`section-header scroll-sync-reveal${caseStudiesInView ? ' revealed' : ''}`} style={{ textAlign: 'center', maxWidth: '600px', marginLeft: 'auto', marginRight: 'auto' }}>
             <TerminalText as="h2" trigger={caseStudiesInView} duration={900}>What our clients say</TerminalText>
           </div>
 
@@ -1037,7 +1036,7 @@ export default function Home() {
       {/* Team */}
       <section className="section" id="team" style={{ background: 'var(--bg-warm)' }}>
         <div className="container">
-          <div ref={teamRef} className="section-header fade-up">
+          <div ref={teamRef} className={`section-header scroll-sync-reveal${teamInView ? ' revealed' : ''}`}>
             <TerminalText as="h2" trigger={teamInView} duration={900}>The people behind Progression Labs</TerminalText>
             <TerminalText as="p" className="team-section-subtitle" trigger={teamInView} duration={800}>A lean team of senior engineers, researchers, and strategists.</TerminalText>
           </div>
@@ -1048,7 +1047,7 @@ export default function Home() {
       {/* Blog */}
       <section className="section section-offwhite" id="blog">
         <div className="container">
-          <div ref={blogRef} className="section-header fade-up">
+          <div ref={blogRef} className={`section-header scroll-sync-reveal${blogInView ? ' revealed' : ''}`}>
             <TerminalText as="h2" trigger={blogInView} duration={900}>Latest thinking from our team</TerminalText>
           </div>
 
@@ -1077,7 +1076,7 @@ export default function Home() {
       {/* CTA */}
       <section className="section cta-section" id="contact">
         <div className="container">
-          <div ref={ctaRef} className="fade-up">
+          <div ref={ctaRef} className={`scroll-sync-reveal${ctaInView ? ' revealed' : ''}`}>
             <TerminalText as="h2" trigger={ctaInView} duration={900}>Ready to transform your business with AI?</TerminalText>
             <p>Whether you need strategic business consultancy, a managed AI platform, or custom technology solutions — our team of experts is ready to help you build AI systems that deliver real results.</p>
             <a href="mailto:hello@progressionlabs.com" className="cta-email">hello@progressionlabs.com</a>

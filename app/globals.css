@@ -111,6 +111,15 @@ ul, ol {
   clip-path: inset(0 100% 0 0);
 }
 
+/* Scroll-triggered clip-path wipe (same feel as hero boot) */
+.scroll-sync-reveal {
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 0.8s cubic-bezier(0.76, 0, 0.24, 1);
+}
+.scroll-sync-reveal.revealed {
+  clip-path: inset(0 0% 0 0);
+}
+
 /* Hero boot data — bottom-right corner */
 .hero-boot-data {
   position: absolute;
