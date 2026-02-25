@@ -615,7 +615,7 @@ export default function Home() {
 
           // Reset state
           if (overlayEl) gsap.set(overlayEl, { opacity: 1, pointerEvents: 'auto' })
-          if (iframeEl) gsap.set(iframeEl, { opacity: 0 })
+          if (iframeEl) gsap.set(iframeEl, { opacity: 0, visibility: 'hidden' })
           glitchHandle.progress = 0
 
           const tl = gsap.timeline()
@@ -640,7 +640,7 @@ export default function Home() {
 
           // 3. After reveal, crossfade to interactive iframe
           if (overlayEl && iframeEl) {
-            tl.to(iframeEl, { opacity: 1, duration: 0.3 }, '-=0.3')
+            tl.to(iframeEl, { opacity: 1, visibility: 'visible', duration: 0.3 }, '-=0.3')
             tl.to(overlayEl, { opacity: 0, pointerEvents: 'none', duration: 0.3 }, '-=0.3')
           }
 
@@ -1037,7 +1037,7 @@ export default function Home() {
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                       allowFullScreen
                       loading="lazy"
-                      style={{ opacity: 0 }}
+                      style={{ visibility: 'hidden' }}
                     />
                     <div className="testimonial-video-overlay">
                       <GlitchImage
