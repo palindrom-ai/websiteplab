@@ -116,6 +116,70 @@ ul, ol {
   will-change: clip-path;
 }
 
+/* --- Blueprint Box — technical border + corner brackets --- */
+.blueprint-box {
+  position: relative;
+  border: 1px solid var(--grid-line);
+}
+
+.blueprint-box::before,
+.blueprint-box::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* Top-left + bottom-right corners */
+.blueprint-box::before {
+  background:
+    linear-gradient(var(--grid-line-dark), var(--grid-line-dark)) left top / 18px 2px no-repeat,
+    linear-gradient(var(--grid-line-dark), var(--grid-line-dark)) left top / 2px 18px no-repeat,
+    linear-gradient(var(--grid-line-dark), var(--grid-line-dark)) right bottom / 18px 2px no-repeat,
+    linear-gradient(var(--grid-line-dark), var(--grid-line-dark)) right bottom / 2px 18px no-repeat;
+}
+
+/* Top-right + bottom-left corners */
+.blueprint-box::after {
+  background:
+    linear-gradient(var(--grid-line-dark), var(--grid-line-dark)) right top / 18px 2px no-repeat,
+    linear-gradient(var(--grid-line-dark), var(--grid-line-dark)) right top / 2px 18px no-repeat,
+    linear-gradient(var(--grid-line-dark), var(--grid-line-dark)) left bottom / 18px 2px no-repeat,
+    linear-gradient(var(--grid-line-dark), var(--grid-line-dark)) left bottom / 2px 18px no-repeat;
+}
+
+/* Light-background variant — dark brackets */
+.blueprint-box-light {
+  position: relative;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.blueprint-box-light::before,
+.blueprint-box-light::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.blueprint-box-light::before {
+  background:
+    linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.15)) left top / 18px 2px no-repeat,
+    linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.15)) left top / 2px 18px no-repeat,
+    linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.15)) right bottom / 18px 2px no-repeat,
+    linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.15)) right bottom / 2px 18px no-repeat;
+}
+
+.blueprint-box-light::after {
+  background:
+    linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.15)) right top / 18px 2px no-repeat,
+    linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.15)) right top / 2px 18px no-repeat,
+    linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.15)) left bottom / 18px 2px no-repeat,
+    linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.15)) left bottom / 2px 18px no-repeat;
+}
+
 /* Hero boot data — bottom-right corner */
 .hero-boot-data {
   position: absolute;
@@ -1894,14 +1958,13 @@ p {
   background: #111111;
   border-radius: var(--radius-md);
   padding: 32px;
-  border: 1px solid var(--border-light);
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   flex-direction: column;
 }
 
 .resource-card:hover {
-  border-color: var(--border-medium);
+  border-color: var(--grid-line-dark);
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
 }
@@ -2280,36 +2343,9 @@ p {
   text-align: left;
   max-width: 500px;
   padding: 40px 32px;
-  border: 1px solid var(--grid-line);
 }
 
-/* Corner bracket markers — 4 corners via gradient-drawn L-shapes */
-.hero-fullscreen-content::before,
-.hero-fullscreen-content::after {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  pointer-events: none;
-  z-index: 11;
-}
-
-/* Top-left + bottom-right corners */
-.hero-fullscreen-content::before {
-  background:
-    /* top-left horizontal */ linear-gradient(var(--grid-line-dark), var(--grid-line-dark)) left top / 18px 2px no-repeat,
-    /* top-left vertical */   linear-gradient(var(--grid-line-dark), var(--grid-line-dark)) left top / 2px 18px no-repeat,
-    /* bottom-right horizontal */ linear-gradient(var(--grid-line-dark), var(--grid-line-dark)) right bottom / 18px 2px no-repeat,
-    /* bottom-right vertical */   linear-gradient(var(--grid-line-dark), var(--grid-line-dark)) right bottom / 2px 18px no-repeat;
-}
-
-/* Top-right + bottom-left corners */
-.hero-fullscreen-content::after {
-  background:
-    /* top-right horizontal */ linear-gradient(var(--grid-line-dark), var(--grid-line-dark)) right top / 18px 2px no-repeat,
-    /* top-right vertical */   linear-gradient(var(--grid-line-dark), var(--grid-line-dark)) right top / 2px 18px no-repeat,
-    /* bottom-left horizontal */ linear-gradient(var(--grid-line-dark), var(--grid-line-dark)) left bottom / 18px 2px no-repeat,
-    /* bottom-left vertical */   linear-gradient(var(--grid-line-dark), var(--grid-line-dark)) left bottom / 2px 18px no-repeat;
-}
+/* Hero uses blueprint-box class in markup for border + corner brackets */
 
 .hero-animation-bg {
   position: absolute;
@@ -2644,7 +2680,6 @@ p {
 /* Blog cards on offwhite background */
 .section-offwhite .resource-card {
   background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.08);
 }
 .section-offwhite .resource-card:hover {
   border-color: rgba(0, 0, 0, 0.15);
@@ -2669,7 +2704,6 @@ p {
   background: var(--bg-cream);
   border-radius: var(--radius-md);
   padding: 40px 32px;
-  border: 1px solid var(--border-light);
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -2833,7 +2867,6 @@ p {
   position: relative;
   overflow: hidden;
   background: #111;
-  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 16px;
   padding: 32px 24px;
   display: flex;

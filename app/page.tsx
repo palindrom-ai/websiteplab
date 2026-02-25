@@ -724,7 +724,7 @@ export default function Home() {
       {/* Hero Section - Fullscreen */}
       <section className="hero-fullscreen" id="hero">
         <div className="hero-fullscreen-inner">
-          <div className={`hero-fullscreen-content ${introComplete ? 'intro-visible' : 'intro-hidden'}`}>
+          <div className={`hero-fullscreen-content blueprint-box ${introComplete ? 'intro-visible' : 'intro-hidden'}`}>
             <TerminalText as="h1" className="hero-dark-title global-sync-reveal" trigger={introComplete} duration={900}>Turn your company into a leader in the age of AI</TerminalText>
             <p className="hero-dark-subtitle global-sync-reveal"><TerminalText trigger={introComplete} duration={900}>We&apos;re a frontier AI-native engineering partner that helps companies in complex industries lead the next decade.</TerminalText></p>
             <div className="hero-dark-actions global-sync-reveal">
@@ -752,7 +752,7 @@ export default function Home() {
 
           <div className="comparison-grid">
             {/* Old Approach */}
-            <div className="comparison-card old" data-comparison="legacy">
+            <div className="comparison-card old blueprint-box" data-comparison="legacy">
               <h3 className="comparison-card-title">Legacy Model</h3>
 
               {/* Visual: Bloated org hierarchy — animated via GSAP */}
@@ -845,7 +845,7 @@ export default function Home() {
             </div>
 
             {/* New Approach */}
-            <div className="comparison-card new-way-card" data-comparison="newway">
+            <div className="comparison-card new-way-card blueprint-box" data-comparison="newway">
               <h3 className="comparison-card-title">The New Way</h3>
 
               {/* Visual: Triangle team + AI agents — animated via GSAP */}
@@ -958,7 +958,7 @@ export default function Home() {
               ].map((service, i) => (
                 <div
                   key={service.num}
-                  className="service-tile"
+                  className="service-tile blueprint-box"
                   ref={(el) => { serviceTileRefs.current[i] = el }}
                   style={{ opacity: 0 }}
                 >
@@ -1010,7 +1010,7 @@ export default function Home() {
                   className={`testimonial-card ${index === activeTestimonial ? 'active' : ''}`}
                 >
                   <div
-                    className="testimonial-video"
+                    className="testimonial-video blueprint-box-light"
                     ref={el => { testimonialVideoContainerRefs.current[index] = el }}
                   >
                     <iframe
@@ -1078,19 +1078,19 @@ export default function Home() {
           </div>
 
           <div className="resources-grid">
-            <a href="#" className="resource-card fade-up">
+            <a href="#" className="resource-card fade-up blueprint-box-light">
               <span className="resource-category strategy">Strategy</span>
               <h4>The Business Case for Production-Ready AI Systems</h4>
               <p className="resource-meta">8 min read &middot; February 2026</p>
             </a>
 
-            <a href="#" className="resource-card fade-up">
+            <a href="#" className="resource-card fade-up blueprint-box-light">
               <span className="resource-category technology">Technology</span>
               <h4>Digital Transformation in 2026: A Strategic Framework</h4>
               <p className="resource-meta">12 min read &middot; January 2026</p>
             </a>
 
-            <a href="#" className="resource-card fade-up">
+            <a href="#" className="resource-card fade-up blueprint-box-light">
               <span className="resource-category case-study">Case Study</span>
               <h4>From AI Experimentation to Enterprise Operations</h4>
               <p className="resource-meta">6 min read &middot; January 2026</p>
@@ -1102,14 +1102,14 @@ export default function Home() {
       {/* CTA */}
       <section className="section cta-section" id="contact">
         <div className="container">
-          <div ref={ctaRef} className="section-title-reveal">
+          <div ref={ctaRef} className="section-title-reveal blueprint-box" style={{ padding: '40px 32px', maxWidth: '600px' }}>
             <TerminalText as="h2" trigger={ctaInView} duration={900}>Ready to transform your business with AI?</TerminalText>
             <p>Whether you need strategic business consultancy, a managed AI platform, or custom technology solutions — our team of experts is ready to help you build AI systems that deliver real results.</p>
             <a href="mailto:hello@progressionlabs.com" className="cta-email">hello@progressionlabs.com</a>
-          </div>
-          <div className="cta-actions fade-up">
-            <a href="#" className="btn btn-primary btn-lg">Schedule a consultation</a>
-            <a href="#" className="btn btn-ghost btn-lg">Request a demo</a>
+            <div className="cta-actions" style={{ marginTop: '16px' }}>
+              <a href="#" className="btn btn-primary btn-lg">Schedule a consultation</a>
+              <a href="#" className="btn btn-ghost btn-lg">Request a demo</a>
+            </div>
           </div>
         </div>
       </section>

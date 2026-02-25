@@ -70,7 +70,7 @@ export default function TeamGrid() {
   return (
     <div className="team-grid">
       {teamMembers.map((member, i) => (
-        <div className="team-card" key={i} style={{ opacity: 0 }}>
+        <div className="team-card blueprint-box" key={i} style={{ opacity: 0 }}>
           <div
             className="team-avatar"
             style={{ background: member.gradient }}
