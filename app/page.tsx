@@ -36,6 +36,7 @@ export default function Home() {
   const [activeTestimonial, setActiveTestimonial] = useState(0)
   const [introComplete, setIntroComplete] = useState(false)
   const [aboutInView, setAboutInView] = useState(false)
+  const [whyUsInView, setWhyUsInView] = useState(false)
   const [comparisonInView, setComparisonInView] = useState(false)
   const [servicesInView, setServicesInView] = useState(false)
   const [caseStudiesInView, setCaseStudiesInView] = useState(false)
@@ -45,6 +46,7 @@ export default function Home() {
   const [bootTime, setBootTime] = useState('')
   const [activeSection, setActiveSection] = useState('hero')
   const aboutRef = useRef<HTMLDivElement>(null)
+  const whyUsRef = useRef<HTMLDivElement>(null)
   const comparisonRef = useRef<HTMLDivElement>(null)
   const servicesRef = useRef<HTMLDivElement>(null)
   const caseStudiesRef = useRef<HTMLDivElement>(null)
@@ -77,6 +79,7 @@ export default function Home() {
   useEffect(() => {
     const sections: [React.RefObject<HTMLDivElement | null>, (v: boolean) => void][] = [
       [aboutRef, setAboutInView],
+      [whyUsRef, setWhyUsInView],
       [comparisonRef, setComparisonInView],
       [servicesRef, setServicesInView],
       [caseStudiesRef, setCaseStudiesInView],
@@ -141,7 +144,7 @@ export default function Home() {
 
   // Track scroll position for nav styling + active section
   useEffect(() => {
-    const sectionIds = ['blog', 'team', 'case-studies', 'services', 'comparison', 'about', 'hero']
+    const sectionIds = ['blog', 'team', 'case-studies', 'services', 'comparison', 'why-us', 'about', 'hero']
     const handleScroll = () => {
       const heroHeight = window.innerHeight
       setScrolledPastHero(window.scrollY > heroHeight - 100)
@@ -323,6 +326,28 @@ export default function Home() {
           }
         )
       })
+
+      // === Why Us Cards — horizontal slide-in with stagger ===
+      const whyUsCards = document.querySelectorAll('.why-us-card')
+      if (whyUsCards.length) {
+        whyUsCards.forEach((card, i) => {
+          gsap.fromTo(card,
+            { opacity: 0, x: -30 },
+            {
+              opacity: 1,
+              x: 0,
+              duration: 0.65,
+              delay: i * 0.12,
+              ease: 'power3.out',
+              scrollTrigger: {
+                trigger: card,
+                start: 'top 85%',
+                toggleActions: 'play none none none'
+              }
+            }
+          )
+        })
+      }
 
       // === Comparison Section Choreography ===
       const comparisonSection = document.querySelector('#comparison')
@@ -664,6 +689,7 @@ export default function Home() {
           <div className="nav-links global-sync-reveal" style={{ clipPath: 'inset(0 100% 0 0)' }}>
             <a href="#hero" className={activeSection === 'hero' ? 'nav-active' : ''}><TerminalText trigger={introComplete} duration={500}>Home</TerminalText><NavPixelWhip /></a>
             <a href="#about" className={activeSection === 'about' ? 'nav-active' : ''}><TerminalText trigger={introComplete} duration={500} delay={50}>About</TerminalText><NavPixelWhip /></a>
+            <a href="#why-us" className={activeSection === 'why-us' ? 'nav-active' : ''}><TerminalText trigger={introComplete} duration={500} delay={75}>Why Us</TerminalText><NavPixelWhip /></a>
             <a href="#services" className={activeSection === 'services' || activeSection === 'comparison' ? 'nav-active' : ''}><TerminalText trigger={introComplete} duration={500} delay={100}>Services</TerminalText><NavPixelWhip /></a>
             <a href="#case-studies" className={activeSection === 'case-studies' ? 'nav-active' : ''}><TerminalText trigger={introComplete} duration={500} delay={200}>Case Studies</TerminalText><NavPixelWhip /></a>
             <a href="#team" className={activeSection === 'team' ? 'nav-active' : ''}><TerminalText trigger={introComplete} duration={500} delay={350}>Team</TerminalText><NavPixelWhip /></a>
@@ -685,6 +711,7 @@ export default function Home() {
       <div className={`mobile-menu ${mobileMenuOpen ? 'active' : ''}`} id="mobile-menu">
         <a href="#hero" onClick={closeMobileMenu}>Home</a>
         <a href="#about" onClick={closeMobileMenu}>About</a>
+        <a href="#why-us" onClick={closeMobileMenu}>Why Us</a>
         <a href="#services" onClick={closeMobileMenu}>Services</a>
         <a href="#case-studies" onClick={closeMobileMenu}>Case Studies</a>
         <a href="#team" onClick={closeMobileMenu}>Team</a>
@@ -733,6 +760,50 @@ export default function Home() {
           <div className="about-content">
             <p className="about-placeholder">Content coming soon — Joe will fill this in.</p>
           </div>
+        </div>
+      </section>
+
+      {/* Why Us */}
+      <section className="section grid-section" id="why-us" style={{ background: 'var(--bg-warm)' }}>
+        <div className="grid-container">
+        <div className="container">
+          <div ref={whyUsRef} className="why-us-header section-title-reveal">
+            <p className="why-us-eyebrow">HOW WE WORK</p>
+            <TerminalText as="h2" trigger={whyUsInView} duration={900}>Progress that compounds</TerminalText>
+            <p className="why-us-subtitle">We embed senior engineers directly with your team to design, build, and deploy AI agents that carry operational load — so your people can focus on the work that actually needs a human.</p>
+          </div>
+
+          <div className="why-us-cards">
+            {[
+              {
+                title: 'We staff agents, not headcount',
+                description: 'Most consultancies solve scale by adding people. We solve it by building agents that carry operational load — so your team grows in capability without growing in cost.',
+              },
+              {
+                title: 'Every agent has an owner',
+                description: "We don\u2019t deploy AI into a vacuum. Every agent we build has a named person on your team who understands it, manages it, and decides when it\u2019s working. No orphaned automations.",
+              },
+              {
+                title: 'First agent live in weeks',
+                description: "We don\u2019t spend months mapping your landscape. We find the highest-friction workflow, build the agent, ship it, and iterate with your team in real operations. Strategy emerges from doing, not presenting.",
+              },
+              {
+                title: 'We measure in operations, not opportunities',
+                description: 'Not "potential ROI." Not "use cases identified." We count the tasks that agents are running in production, every day, inside your business.',
+              },
+              {
+                title: 'We design ourselves out of the job',
+                description: 'The engagement ends when your team runs the agents without us. We build for independence — internal capability, clear documentation, full ownership transfer.',
+              },
+            ].map((card, i) => (
+              <div key={i} className="why-us-card">
+                <div className="why-us-card-number">0{i + 1}</div>
+                <h3 className="why-us-card-title">{card.title}</h3>
+                <p className="why-us-card-description">{card.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
         </div>
       </section>
 
