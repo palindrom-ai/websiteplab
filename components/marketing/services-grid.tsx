@@ -120,7 +120,7 @@ function ServiceCard({ service, index }: { service: typeof services[number]; ind
         {service.description}
       </p>
       <a
-        href="#"
+        href="/services"
         className="text-sm font-medium text-blue inline-flex items-center gap-1 hover:gap-2 transition-all duration-200"
       >
         Learn more &rarr;
