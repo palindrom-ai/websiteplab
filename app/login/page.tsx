@@ -76,7 +76,7 @@ export default function LoginPage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="demo@progressionlabs.com"
+                placeholder="you@company.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -112,7 +112,7 @@ export default function LoginPage() {
           </form>
 
           <p className="text-xs text-text-tertiary text-center mt-6">
-            Demo credentials: demo@progressionlabs.com / progression-demo
+            Contact your account manager for access.
           </p>
         </div>
 
