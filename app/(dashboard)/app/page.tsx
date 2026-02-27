@@ -1,7 +1,6 @@
 "use client";
 
 import { StatCard } from "@/components/ui/stat-card";
-import { useAuth } from "@/lib/auth-context";
 
 const stats = [
   { label: "Active Projects", value: "5", change: "+2 this quarter", changeType: "positive" as const, barColor: "salmon" as const, barPercent: 70 },
@@ -30,8 +29,6 @@ const typeColors: Record<string, string> = {
 };
 
 export default function DashboardOverview() {
-  const { user } = useAuth();
-
   return (
     <div>
       <div className="mb-8">
