@@ -4,6 +4,8 @@
    Scoped under .experiment wrapper
    ============================================ */
 
+
+
 /* --- Fluid Scaling Tokens (Isidor formula) ---
    size = from + (to - from) * ((100vw - 1200px) / 720)
    vwFrom: 1200, vwTo: 1920
@@ -75,6 +77,23 @@ body:has(.experiment) {
   width: 100vw;
   max-width: 100%;
   box-sizing: border-box;
+  position: relative;
+}
+
+/* Continuous dashed border frame matching hero perimeter (Isidor style) —
+   Two vertical lines at 80px from each edge, running the full page height.
+   Aligns exactly with .exp-hero-frame's left/right edges (hero padding: 16px 80px 80px 80px). */
+.experiment::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 80px;
+  right: 80px;
+  border-left: 1px dashed rgba(255, 255, 255, 0.12);
+  border-right: 1px dashed rgba(255, 255, 255, 0.12);
+  pointer-events: none;
+  z-index: 3;
 }
 
 .experiment *,
@@ -136,8 +155,11 @@ body:has(.experiment) {
   align-items: center;
   justify-content: center;
   padding: 0;
-  height: 1px;
-  background: var(--exp-border);
+  height: 0;
+  background: none;
+  border-top: 1px dashed rgba(255, 255, 255, 0.12);
+  margin-left: 80px;
+  margin-right: 80px;
 }
 
 .exp-plus-divider-mark {
@@ -248,7 +270,7 @@ body:has(.experiment) {
   background: transparent;
   backdrop-filter: none;
   border-bottom: none;
-  padding: 0 40px;
+  padding: 0 max(40px, calc((100vw - var(--exp-container)) / 2));
   height: 56px;
   display: grid;
   grid-template-columns: 1fr auto 1fr;
@@ -573,22 +595,23 @@ body:has(.experiment) {
   grid-column: 7 / 13;
 }
 
-/* --- Isidor Layout Match: edge-to-edge + borderless cards for --half grid --- */
+/* --- Isidor Layout Match: constrained within 80px frame --- */
 .exp-12-grid--half {
   max-width: none;
+  margin-left: 80px;
+  margin-right: 80px;
   padding-left: 0;
   padding-right: 0;
-  border: 1px dashed rgba(255, 255, 255, 0.12);
 }
 
 .exp-12-grid--half .exp-col-label--gradient {
-  padding-left: max(40px, calc((100vw - var(--exp-container)) / 2 + 40px));
+  padding-left: 40px;
   border: none;
   border-right: 1px dashed rgba(255, 255, 255, 0.12);
 }
 
 .exp-12-grid--half .exp-col-content {
-  padding-right: max(32px, calc((100vw - var(--exp-container)) / 2));
+  padding-right: 32px;
   padding-top: 48px;
   padding-bottom: 48px;
   gap: 40px;
@@ -650,22 +673,38 @@ body:has(.experiment) {
   margin-left: auto;
 }
 
-/* --- Navy gradient sticky label (exact Isidor .enterprice_sticky-part gradient) --- */
+/* --- Static blue gradient with dashed border (Isidor style) --- */
 .exp-col-label--gradient {
-  background-size: 200% 200%;
-  background-image: linear-gradient(-5deg, rgba(9, 67, 160, 0.00) 10%, rgba(9, 67, 160, 0.4) 30%, rgba(9, 67, 160, 0.85) 55%, #0943A0 75%, rgba(9, 67, 160, 0.6) 90%, rgba(9, 67, 160, 0.00) 100%);
-  animation: gradient-drift 8s ease-in-out infinite;
+  /* Note: position:sticky comes from .exp-col-label — do NOT set position:relative here
+     as it would override sticky. sticky already creates a containing block for ::after. */
+  /* Vivid blue at top → dark at bottom (matching Isidor reference) */
+  background-image: linear-gradient(
+    to bottom,
+    hsl(217, 100%, 50%) 0%,
+    hsl(217, 100%, 48%) 25%,
+    hsl(218, 95%, 40%) 45%,
+    hsl(220, 85%, 22%) 65%,
+    hsl(220, 70%, 8%) 85%,
+    hsl(220, 50%, 3%) 100%
+  );
   padding: 48px 40px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: none;
   min-height: 400px;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
 }
 
-@keyframes gradient-drift {
-  0%, 100% { background-position: 0% 0%; }
-  50% { background-position: 100% 100%; }
+/* Grain/noise overlay matching hero */
+.exp-col-label--gradient::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.4;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+  z-index: 1;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E") repeat;
 }
 
 .exp-col-label--gradient .exp-section-heading {
@@ -684,6 +723,8 @@ body:has(.experiment) {
   padding: 48px 0;
   max-width: 100%;
   overflow: hidden;
+  margin-left: 80px;
+  margin-right: 80px;
 }
 
 .exp-logo-carousel-label {
@@ -938,6 +979,8 @@ body:has(.experiment) {
 .exp-cta {
   text-align: center;
   padding: var(--exp-section-pad) 32px;
+  margin-left: 80px;
+  margin-right: 80px;
 }
 
 .exp-cta h2 {
