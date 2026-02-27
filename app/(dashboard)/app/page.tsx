@@ -4,21 +4,21 @@ import { StatCard } from "@/components/ui/stat-card";
 import { useAuth } from "@/lib/auth-context";
 
 const stats = [
-  { label: "Active Projects", value: "7", change: "+2 this quarter", changeType: "positive" as const, barColor: "salmon" as const, barPercent: 70 },
-  { label: "Total Revenue", value: "$487K", change: "+18% vs Q4", changeType: "positive" as const, barColor: "orchid" as const, barPercent: 82 },
-  { label: "Active Clients", value: "9", change: "+3 this year", changeType: "positive" as const, barColor: "blue" as const, barPercent: 60 },
-  { label: "Avg. Satisfaction", value: "97.3%", change: "+1.2pp", changeType: "positive" as const, barColor: "black" as const, barPercent: 97 },
+  { label: "Active Projects", value: "5", change: "+2 this quarter", changeType: "positive" as const, barColor: "salmon" as const, barPercent: 70 },
+  { label: "Total Investment", value: "$517K", change: "+22% vs Q4", changeType: "positive" as const, barColor: "orchid" as const, barPercent: 82 },
+  { label: "Team Members", value: "6", change: "Fully staffed", changeType: "positive" as const, barColor: "blue" as const, barPercent: 60 },
+  { label: "Delivery Satisfaction", value: "98%", change: "+2pp vs Q4", changeType: "positive" as const, barColor: "black" as const, barPercent: 98 },
 ];
 
 const activity = [
-  { time: "2 hours ago", text: "Invoice INV-2026-009 sent to TechNova Inc", type: "invoice" },
-  { time: "5 hours ago", text: "PRJ-003 Supply Chain Optimizer milestone completed", type: "project" },
-  { time: "Yesterday", text: "New client onboarded: SteelBridge Corp", type: "client" },
-  { time: "Yesterday", text: "Invoice INV-2026-002 payment received from Atlas Financial", type: "payment" },
-  { time: "2 days ago", text: "PRJ-005 AI Transformation Roadmap entered Phase 2", type: "project" },
-  { time: "3 days ago", text: "Quarterly report generated for Q1 2026", type: "report" },
-  { time: "4 days ago", text: "PRJ-009 Agent Orchestration Framework kickoff meeting", type: "project" },
-  { time: "1 week ago", text: "Invoice INV-2026-010 payment received from Meridian Health", type: "payment" },
+  { time: "2 hours ago", text: "Invoice INV-2026-009 issued for Patient Communication Sentiment Analysis", type: "invoice" },
+  { time: "5 hours ago", text: "Epic EHR Integration Pipeline delivered ahead of schedule — now in production", type: "project" },
+  { time: "Yesterday", text: "Interpreter Quality Scoring Model reached 94.7% prediction accuracy in beta", type: "project" },
+  { time: "Yesterday", text: "Invoice INV-2026-004 payment received — Language Access Analytics Dashboard", type: "payment" },
+  { time: "2 days ago", text: "AI Transformation Roadmap Phase 2 approved — expanding to patient communication analytics", type: "project" },
+  { time: "3 days ago", text: "Q1 2026 engagement summary report generated", type: "report" },
+  { time: "4 days ago", text: "Real-Time Speech Recognition API supporting 430+ languages at 15s connection speed", type: "project" },
+  { time: "1 week ago", text: "Multilingual Terminology Extraction reaching 63% completion milestone", type: "project" },
 ];
 
 const typeColors: Record<string, string> = {
@@ -39,7 +39,7 @@ export default function DashboardOverview() {
           Welcome back{user?.email ? `, ${user.email.split("@")[0]}` : ""}
         </h2>
         <p className="text-sm text-text-tertiary">
-          Here&apos;s an overview of your AI operations
+          Here&apos;s an overview of your AI engagement with Progression Labs
         </p>
       </div>
 

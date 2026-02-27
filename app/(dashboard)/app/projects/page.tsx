@@ -39,7 +39,6 @@ export default function ProjectsPage() {
             <TableRow>
               <TableHead>ID</TableHead>
               <TableHead>Project</TableHead>
-              <TableHead>Client</TableHead>
               <TableHead>Type</TableHead>
               <TableHead>Consultant</TableHead>
               <TableHead>Status</TableHead>
@@ -57,7 +56,6 @@ export default function ProjectsPage() {
                   <TableCell className="font-medium text-black">
                     {project.name}
                   </TableCell>
-                  <TableCell>{project.client}</TableCell>
                   <TableCell>{project.type}</TableCell>
                   <TableCell>{project.consultant}</TableCell>
                   <TableCell>

@@ -84,7 +84,6 @@ export default function InvoicesPage() {
           <TableHeader>
             <TableRow>
               <TableHead>Invoice</TableHead>
-              <TableHead>Client</TableHead>
               <TableHead>Project</TableHead>
               <TableHead>Amount</TableHead>
               <TableHead>Status</TableHead>
@@ -101,9 +100,8 @@ export default function InvoicesPage() {
                     {invoice.id}
                   </TableCell>
                   <TableCell className="font-medium text-black">
-                    {invoice.client}
+                    {invoice.project}
                   </TableCell>
-                  <TableCell>{invoice.project}</TableCell>
                   <TableCell className="font-medium text-black">
                     {formatCurrency(invoice.amount)}
                   </TableCell>

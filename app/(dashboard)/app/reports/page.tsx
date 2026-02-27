@@ -41,7 +41,7 @@ export default function ReportsPage() {
         {/* Revenue by service */}
         <div className="bg-white rounded-md border border-[rgba(0,0,0,0.08)] p-6">
           <h3 className="text-sm font-semibold tracking-[-0.01em] mb-1">
-            Revenue by Service (Q1 2026)
+            Investment by Workstream (Q1 2026)
           </h3>
           <p className="text-xs text-text-tertiary mb-6">
             In thousands USD
@@ -52,7 +52,7 @@ export default function ReportsPage() {
         {/* Monthly revenue trend */}
         <div className="bg-white rounded-md border border-[rgba(0,0,0,0.08)] p-6">
           <h3 className="text-sm font-semibold tracking-[-0.01em] mb-1">
-            Monthly Revenue Trend
+            Monthly Investment Trend
           </h3>
           <p className="text-xs text-text-tertiary mb-6">
             Last 5 months, in thousands USD
@@ -65,10 +65,10 @@ export default function ReportsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="bg-white rounded-md border border-[rgba(0,0,0,0.08)] p-6">
           <h3 className="text-sm font-semibold tracking-[-0.01em] mb-1">
-            Client Satisfaction Score
+            Delivery Satisfaction Score
           </h3>
           <p className="text-xs text-text-tertiary mb-6">
-            Monthly NPS-derived score
+            Monthly satisfaction rating
           </p>
           <ChartLine data={clientSatisfaction} color="#0000FF" height={180} />
         </div>
