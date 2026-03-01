@@ -49,9 +49,9 @@ export default function MethodSection() {
 
       labelRef.current.style.backgroundImage = `linear-gradient(
         to bottom,
-        rgba(${r}, ${g}, ${b}, 0.45) 0%,
-        rgba(${r}, ${g}, ${b}, 0.22) 30%,
-        rgba(${r}, ${g}, ${b}, 0.06) 65%,
+        rgba(${r}, ${g}, ${b}, 0.8) 0%,
+        rgba(${r}, ${g}, ${b}, 0.5) 30%,
+        rgba(${r}, ${g}, ${b}, 0.18) 65%,
         transparent 100%
       )`
 
