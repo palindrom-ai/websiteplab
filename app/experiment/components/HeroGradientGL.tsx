@@ -97,6 +97,12 @@ const fragmentShader = `
     // ═══ 4. PURE COLOR BLENDING ═══
     vec3 finalColor = mix(smoothColor, pixelColor, mask);
 
+    // ═══ 4b. GRID LINES — visible cell edges for true pixel look ═══
+    vec2 cellFrac = fract(vUv * grid);
+    float lineW = 1.5 / blockPx; // ~1.5px thin lines
+    float gridLine = 1.0 - step(lineW, cellFrac.x) * step(lineW, cellFrac.y);
+    finalColor *= 1.0 - gridLine * mask * 0.35;
+
     // ═══ 5. PAGE-LOAD PIXEL REVEAL ═══
     if (uRevealProgress < 1.0) {
       float cellCount = floor(uResolution.x / 20.0);
