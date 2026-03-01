@@ -15,169 +15,110 @@ const vertexShader = `
   }
 `
 
-// Single-pass fragment shader: procedural hue-cycling gradient + pixel reveal
+// Single-pass fragment shader: smooth gradient + mouse-driven pixel reveal + page-load reveal
 const fragmentShader = `
   precision highp float;
 
-  uniform float uTime;          // elapsed seconds
-  uniform float uRevealProgress; // 0 = dark grid, 1 = full gradient
-  uniform vec2 uResolution;     // container size in px
+  uniform float uTime;           // elapsed seconds
+  uniform float uRevealProgress; // 0 = dark grid, 1 = full gradient (page-load)
+  uniform vec2 uResolution;      // container size in px
+  uniform vec2 uMouse;           // damped mouse position in UV space (0-1)
+  uniform float uMouseActive;    // 0 = not hovering, 1 = hovering (GSAP-animated)
 
   varying vec2 vUv;
-
-  // ─── HSL → RGB (matches HeroGradientCanvas.tsx hslToRgbStr) ───
-  vec3 hsl2rgb(float h, float s, float l) {
-    h = h / 360.0;
-    float a = s * min(l, 1.0 - l);
-    float f0 = mod(0.0 + h * 12.0, 12.0);
-    float f8 = mod(8.0 + h * 12.0, 12.0);
-    float f4 = mod(4.0 + h * 12.0, 12.0);
-    float r = l - a * max(min(min(f0 - 3.0, 9.0 - f0), 1.0), -1.0);
-    float g = l - a * max(min(min(f8 - 3.0, 9.0 - f8), 1.0), -1.0);
-    float b = l - a * max(min(min(f4 - 3.0, 9.0 - f4), 1.0), -1.0);
-    return vec3(r, g, b);
-  }
-
-  // ─── Shortest-path hue interpolation ───
-  float lerpHue(float a, float b, float t) {
-    float diff = b - a;
-    if (diff > 180.0) diff -= 360.0;
-    if (diff < -180.0) diff += 360.0;
-    return mod(a + diff * t + 360.0, 360.0);
-  }
-
-  float lerp1(float a, float b, float t) {
-    return a + (b - a) * t;
-  }
 
   // ─── Cubic smoothstep for organic keyframe easing ───
   float ssmooth(float t) {
     return t * t * (3.0 - 2.0 * t);
   }
 
-  // ─── Per-cell deterministic random ───
+  // ─── Per-cell deterministic random (for page-load reveal) ───
   float hash(vec2 p) {
     return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
   }
 
-  void main() {
-    // ═══ LAYER 1: Procedural hue-cycling gradient ═══
-    // 5 keyframes over 30s cycle, matching HeroGradientCanvas exactly
-    float cycleMs = 30000.0;
-    float elapsed = uTime * 1000.0;
-    float progress = mod(elapsed, cycleMs) / cycleMs;
+  // ─── 7-stop gradient ramp from near-black to white ───
+  vec3 computeGradient(float gp, vec3 peak) {
+    vec3 deep = peak * 0.15;
+    vec3 mid1 = peak * 0.40;
+    vec3 mid2 = peak * 0.70;
+    if (gp < 0.03) return mix(vec3(0.004), deep, gp / 0.03);
+    else if (gp < 0.15) return mix(deep, mid1, (gp - 0.03) / 0.12);
+    else if (gp < 0.30) return mix(mid1, mid2, (gp - 0.15) / 0.15);
+    else if (gp < 0.55) return mix(mid2, peak, (gp - 0.30) / 0.25);
+    else if (gp < 0.95) return mix(peak, vec3(1.0), (gp - 0.55) / 0.40);
+    else return vec3(1.0);
+  }
+
+  // ═══ 1. PURE COLOR GENERATION ═══
+  // Self-contained: takes any UV, returns the gradient color at that point
+  // including time-based brand color cycling.
+  vec3 getGradientColor(vec2 uv) {
+    // Progression Labs brand palette — 5 colors over 30s cycle
+    vec3 cOrchid    = vec3(0.729, 0.333, 0.827); // #BA55D3
+    vec3 cSalmon    = vec3(1.000, 0.627, 0.478); // #FFA07A
+    vec3 cGreen     = vec3(0.725, 0.914, 0.475); // #B9E979
+    vec3 cTurquoise = vec3(0.251, 0.878, 0.816); // #40E0D0
+    vec3 cBlue      = vec3(0.000, 0.000, 1.000); // #0000FF
+
+    float cycleSec = 30.0;
+    float progress = mod(uTime, cycleSec) / cycleSec;
     float segProgress = progress * 5.0;
     int segIndex = int(floor(segProgress));
     float t = ssmooth(segProgress - floor(segProgress));
 
-    // Keyframe lookup via if/else (GLSL ES 1.0 safe)
-    float fromH, fromS, fromL, toH, toS, toL;
+    vec3 fromColor, toColor;
+    if (segIndex == 0)      { fromColor = cOrchid;    toColor = cSalmon;    }
+    else if (segIndex == 1) { fromColor = cSalmon;    toColor = cGreen;     }
+    else if (segIndex == 2) { fromColor = cGreen;     toColor = cTurquoise; }
+    else if (segIndex == 3) { fromColor = cTurquoise; toColor = cBlue;      }
+    else                    { fromColor = cBlue;      toColor = cOrchid;    }
 
-    if (segIndex == 0) {
-      // Blue → Green
-      fromH = 220.0; fromS = 0.72; fromL = 0.38;
-      toH   = 150.0; toS   = 0.65; toL   = 0.42;
-    } else if (segIndex == 1) {
-      // Green → Yellow
-      fromH = 150.0; fromS = 0.65; fromL = 0.42;
-      toH   = 48.0;  toS   = 0.85; toL   = 0.52;
-    } else if (segIndex == 2) {
-      // Yellow → Orange
-      fromH = 48.0;  fromS = 0.85; fromL = 0.52;
-      toH   = 25.0;  toS   = 0.82; toL   = 0.48;
-    } else if (segIndex == 3) {
-      // Orange → Pink
-      fromH = 25.0;  fromS = 0.82; fromL = 0.48;
-      toH   = 330.0; toS   = 0.68; toL   = 0.48;
-    } else {
-      // Pink → Blue (wrap)
-      fromH = 330.0; fromS = 0.68; fromL = 0.48;
-      toH   = 220.0; toS   = 0.72; toL   = 0.38;
+    vec3 peakColor = mix(fromColor, toColor, t);
+    float gp = 1.0 - uv.y;
+    return computeGradient(gp, peakColor);
+  }
+
+  void main() {
+    // ═══ 2. DUAL TEXTURES: smooth + pixelated ═══
+    vec3 smoothColor = getGradientColor(vUv);
+
+    float blockPx = 45.0; // ~45px square blocks
+    vec2 grid = uResolution / blockPx;
+    vec2 pixelUv = floor(vUv * grid) / grid;
+    vec3 pixelColor = getGradientColor(pixelUv);
+
+    // ═══ 3. ORGANIC REVEAL MASK (Gaussian falloff) ═══
+    float aspect = uResolution.x / uResolution.y;
+    vec2 aspectVec = vec2(aspect, 1.0);
+    float dist = distance(vUv * aspectVec, uMouse * aspectVec);
+    float mask = exp(-dist * dist * 6.0) * uMouseActive;
+
+    // ═══ 4. PURE COLOR BLENDING ═══
+    vec3 finalColor = mix(smoothColor, pixelColor, mask);
+
+    // ═══ 5. PAGE-LOAD PIXEL REVEAL ═══
+    if (uRevealProgress < 1.0) {
+      float cellCount = floor(uResolution.x / 20.0);
+      vec2 revealGrid = vec2(cellCount, cellCount * uResolution.y / uResolution.x);
+      vec2 cell = floor(vUv * revealGrid);
+      float noise = hash(cell);
+      float sweep = 1.0 - vUv.y;
+      float threshold = noise * 0.3 + sweep * 0.7;
+      vec3 darkColor = vec3(0.14);
+
+      if (uRevealProgress > threshold + 0.08) {
+        // Fully revealed — show blended gradient
+      } else if (uRevealProgress > threshold) {
+        gl_FragColor = vec4(darkColor, 1.0);
+        return;
+      } else {
+        gl_FragColor = vec4(vec3(0.004), 1.0);
+        return;
+      }
     }
 
-    float hue   = lerpHue(fromH, toH, t);
-    float sat   = lerp1(fromS, toS, t);
-    float light = lerp1(fromL, toL, t);
-
-    // Gradient position: 0 at top (dark), 1 at bottom (white)
-    // THREE.js PlaneGeometry: vUv.y=1 is top, vUv.y=0 is bottom
-    float gp = 1.0 - vUv.y;
-
-    // 10-stop gradient matching Canvas version exactly
-    vec3 gradColor;
-    if (gp < 0.10) {
-      float t2 = gp / 0.10;
-      gradColor = mix(vec3(0.004), hsl2rgb(hue, sat * 0.5, light * 0.12), t2);
-    } else if (gp < 0.22) {
-      float t2 = (gp - 0.10) / 0.12;
-      gradColor = mix(
-        hsl2rgb(hue, sat * 0.5, light * 0.12),
-        hsl2rgb(hue, sat * 0.7, light * 0.25), t2);
-    } else if (gp < 0.35) {
-      float t2 = (gp - 0.22) / 0.13;
-      gradColor = mix(
-        hsl2rgb(hue, sat * 0.7, light * 0.25),
-        hsl2rgb(hue, sat * 0.9, light * 0.55), t2);
-    } else if (gp < 0.48) {
-      float t2 = (gp - 0.35) / 0.13;
-      gradColor = mix(
-        hsl2rgb(hue, sat * 0.9, light * 0.55),
-        hsl2rgb(hue, sat, light * 0.85), t2);
-    } else if (gp < 0.58) {
-      float t2 = (gp - 0.48) / 0.10;
-      gradColor = mix(
-        hsl2rgb(hue, sat, light * 0.85),
-        hsl2rgb(hue, sat * 0.9, light * 1.1), t2);
-    } else if (gp < 0.68) {
-      float t2 = (gp - 0.58) / 0.10;
-      gradColor = mix(
-        hsl2rgb(hue, sat * 0.9, light * 1.1),
-        hsl2rgb(hue, sat * 0.6, min(0.85, light * 1.4)), t2);
-    } else if (gp < 0.78) {
-      float t2 = (gp - 0.68) / 0.10;
-      gradColor = mix(
-        hsl2rgb(hue, sat * 0.6, min(0.85, light * 1.4)),
-        hsl2rgb(hue, sat * 0.35, min(0.92, light * 1.7)), t2);
-    } else if (gp < 0.88) {
-      float t2 = (gp - 0.78) / 0.10;
-      gradColor = mix(
-        hsl2rgb(hue, sat * 0.35, min(0.92, light * 1.7)),
-        hsl2rgb(hue, sat * 0.15, 0.95), t2);
-    } else {
-      float t2 = (gp - 0.88) / 0.12;
-      gradColor = mix(hsl2rgb(hue, sat * 0.15, 0.95), vec3(1.0), t2);
-    }
-
-    // ═══ LAYER 2: Pixel reveal ═══
-    // When fully revealed, skip all reveal math (perf optimization)
-    if (uRevealProgress >= 1.0) {
-      gl_FragColor = vec4(gradColor, 1.0);
-      return;
-    }
-
-    // Grid: ~20px cells
-    float cellCount = floor(uResolution.x / 20.0);
-    vec2 gridSize = vec2(cellCount, cellCount * uResolution.y / uResolution.x);
-    vec2 cell = floor(vUv * gridSize);
-
-    float noise = hash(cell);
-
-    // Top-to-bottom sweep: top reveals first
-    float sweep = 1.0 - vUv.y; // 0 at top, 1 at bottom
-    float threshold = noise * 0.3 + sweep * 0.7;
-
-    vec3 darkColor = vec3(0.14); // #242424 transition squares
-
-    if (uRevealProgress > threshold + 0.08) {
-      // Fully revealed cell — show gradient
-      gl_FragColor = vec4(gradColor, 1.0);
-    } else if (uRevealProgress > threshold) {
-      // Transition zone — dark colored squares
-      gl_FragColor = vec4(darkColor, 1.0);
-    } else {
-      // Unrevealed — dark background
-      gl_FragColor = vec4(vec3(0.004), 1.0); // #010101
-    }
+    gl_FragColor = vec4(finalColor, 1.0);
   }
 `
 
@@ -190,6 +131,7 @@ export default function HeroGradientGL({ revealTrigger }: HeroGradientGLProps) {
   const rafRef = useRef<number>(0)
   const startRef = useRef(0)
   const mountedRef = useRef(true)
+  const mouseTargetRef = useRef({ x: 0.5, y: 0.5 })
 
   // Init Three.js immediately (hero is always visible)
   useEffect(() => {
@@ -224,6 +166,8 @@ export default function HeroGradientGL({ revealTrigger }: HeroGradientGLProps) {
         uTime: { value: 0 },
         uRevealProgress: { value: 0 },
         uResolution: { value: new THREE.Vector2(width, height) },
+        uMouse: { value: new THREE.Vector2(0.5, 0.5) },
+        uMouseActive: { value: 0 },
       },
     })
     materialRef.current = material
@@ -234,15 +178,77 @@ export default function HeroGradientGL({ revealTrigger }: HeroGradientGLProps) {
 
     startRef.current = performance.now() / 1000
 
-    // Continuous render loop — uTime always updates for gradient cycling
+    // Continuous render loop — uTime + damped mouse tracking
+    const dampingSpeed = 0.08
     const tick = () => {
       if (!mountedRef.current) return
       const now = performance.now() / 1000
       material.uniforms.uTime.value = now - startRef.current
+
+      // Lerp uMouse toward mouseTarget for fluid trailing
+      const mouse = material.uniforms.uMouse.value
+      const target = mouseTargetRef.current
+      mouse.x += (target.x - mouse.x) * dampingSpeed
+      mouse.y += (target.y - mouse.y) * dampingSpeed
+
       renderer.render(scene, camera)
       rafRef.current = requestAnimationFrame(tick)
     }
     rafRef.current = requestAnimationFrame(tick)
+
+    // ─── Mouse interaction ───
+    // Listen on window because the canvas sits behind overlay layers
+    let mouseActiveTween: { kill: () => void } | null = null
+    let isInsideHero = false
+    let gsapModule: { default: { to: Function } } | null = null
+
+    const loadGsap = async () => {
+      if (!gsapModule) gsapModule = await import('gsap')
+      return gsapModule.default
+    }
+
+    const onWindowMouseMove = async (e: MouseEvent) => {
+      const rect = renderer.domElement.getBoundingClientRect()
+      const inside =
+        rect.width > 0 &&
+        rect.height > 0 &&
+        e.clientX >= rect.left &&
+        e.clientX <= rect.right &&
+        e.clientY >= rect.top &&
+        e.clientY <= rect.bottom
+
+      if (inside) {
+        // Update mouse target (damped in render loop)
+        const x = (e.clientX - rect.left) / rect.width
+        const y = 1.0 - (e.clientY - rect.top) / rect.height
+        mouseTargetRef.current.x = x
+        mouseTargetRef.current.y = y
+
+        // Fade in uMouseActive if just entered
+        if (!isInsideHero) {
+          isInsideHero = true
+          const gsap = await loadGsap()
+          mouseActiveTween?.kill()
+          mouseActiveTween = gsap.to(material.uniforms.uMouseActive, {
+            value: 1,
+            duration: 0.3,
+            ease: 'power2.out',
+          })
+        }
+      } else if (isInsideHero) {
+        // Mouse left — fade out
+        isInsideHero = false
+        const gsap = await loadGsap()
+        mouseActiveTween?.kill()
+        mouseActiveTween = gsap.to(material.uniforms.uMouseActive, {
+          value: 0,
+          duration: 0.3,
+          ease: 'power2.in',
+        })
+      }
+    }
+
+    window.addEventListener('mousemove', onWindowMouseMove)
 
     // ResizeObserver
     const ro = new ResizeObserver((entries) => {
@@ -260,6 +266,9 @@ export default function HeroGradientGL({ revealTrigger }: HeroGradientGLProps) {
       mountedRef.current = false
       cancelAnimationFrame(rafRef.current)
       ro.disconnect()
+      mouseActiveTween?.kill()
+
+      window.removeEventListener('mousemove', onWindowMouseMove)
 
       renderer.dispose()
       if (container.contains(renderer.domElement)) {
@@ -276,7 +285,7 @@ export default function HeroGradientGL({ revealTrigger }: HeroGradientGLProps) {
     }
   }, [])
 
-  // Trigger reveal animation via GSAP
+  // Trigger page-load reveal animation via GSAP
   useEffect(() => {
     if (!revealTrigger || !materialRef.current) return
 
