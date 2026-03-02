@@ -97,7 +97,16 @@ const fragmentShader = `
     float aspect = uResolution.x / uResolution.y;
     vec2 aspectVec = vec2(aspect, 1.0);
     float dist = distance(vUv * aspectVec, uMouse * aspectVec);
-    float mask = exp(-dist * dist * 18.0) * uMouseActive;
+    float mouseMask = exp(-dist * dist * 18.0) * uMouseActive;
+
+    // ─── Ambient diagonal shimmer (sweeps top-left → bottom-right) ───
+    float diag = (vUv.x + 1.0 - vUv.y) * 0.5;
+    float shimmerPos = fract(uTime * 0.25);
+    float shimmerDist = abs(diag - shimmerPos);
+    shimmerDist = min(shimmerDist, 1.0 - shimmerDist);
+    float shimmerMask = exp(-shimmerDist * shimmerDist * 120.0) * 0.6;
+
+    float mask = max(mouseMask, shimmerMask * (1.0 - uMouseActive));
 
     // ═══ 4. PURE COLOR BLENDING ═══
     vec3 finalColor = mix(smoothColor, pixelColor, mask);
