@@ -946,10 +946,14 @@ body:has(.experiment) {
 
 .exp-finder-content {
   min-height: 560px;
-  padding-top: 0;
   position: sticky;
   top: 15vh;
   align-self: start;
+}
+
+/* Override the generic half-grid padding so the terminal aligns with the left label */
+.exp-12-grid--half .exp-finder-content {
+  padding-top: 0;
 }
 
 /* ── Terminal container ── */
