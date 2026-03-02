@@ -75,7 +75,7 @@ const fragmentShader = `
     else                    { fromColor = cBlue;      toColor = cOrchid;    }
 
     vec3 peakColor = mix(fromColor, toColor, t);
-    float gp = 1.0 - uv.y;
+    float gp = uv.y;
     return computeGradient(gp, peakColor);
   }
 
