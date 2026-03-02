@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import HeroSection from './components/HeroSection'
 import ExperimentNav from './components/ExperimentNav'
 import LogoMarquee from './components/LogoMarquee'
@@ -13,6 +13,14 @@ import PlusDivider from './components/PlusDivider'
 export default function ExperimentPage() {
   const navRef = useRef<HTMLElement>(null)
   const [showBrand, setShowBrand] = useState(false)
+
+  // Force scroll to top on page load — prevents browser restoring scroll to a hash anchor
+  useEffect(() => {
+    if (window.location.hash) {
+      history.replaceState(null, '', window.location.pathname)
+    }
+    window.scrollTo(0, 0)
+  }, [])
 
   const handleNavReveal = () => {
     if (navRef.current) {
