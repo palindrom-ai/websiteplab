@@ -492,12 +492,12 @@ export default function FindYourFit() {
             <div className="exp-finder-step exp-finder-step--visible">
               <div className={`exp-terminal-line${resultLines >= 1 ? ' exp-terminal-line--visible' : ''}`}>
                 <div className="exp-terminal-divider">
-                  ──────── ANALYSIS COMPLETE ────────
+                  Analysis complete
                 </div>
               </div>
               <div className={`exp-terminal-line${resultLines >= 2 ? ' exp-terminal-line--visible' : ''}`}>
                 <div className="exp-terminal-result-title">
-                  <span className="exp-terminal-caret">&gt;</span> {recommendation.title}
+                  {recommendation.title}
                 </div>
               </div>
               <div className={`exp-terminal-line${resultLines >= 3 ? ' exp-terminal-line--visible' : ''}`}>

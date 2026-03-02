@@ -1096,18 +1096,20 @@ body:has(.experiment) {
 }
 
 .exp-terminal-divider {
-  font-family: var(--exp-mono);
-  color: rgba(255, 255, 255, 0.25);
+  font-family: 'Inter', sans-serif;
+  color: rgba(255, 255, 255, 0.3);
   font-size: 0.7rem;
+  font-weight: 500;
   letter-spacing: 0.18em;
+  text-transform: uppercase;
   margin-bottom: 20px;
 }
 
 .exp-terminal-result-title {
   font-family: 'Inter', sans-serif;
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: var(--exp-text-primary);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #ffffff;
   margin-bottom: 14px;
   line-height: 1.35;
 }
@@ -1115,7 +1117,7 @@ body:has(.experiment) {
 .exp-terminal-result-desc {
   font-family: 'Inter', sans-serif;
   font-size: 0.95rem;
-  color: rgba(255, 255, 255, 0.75);
+  color: rgba(255, 255, 255, 0.72);
   line-height: 1.7;
   margin-bottom: 22px;
 }
@@ -1128,13 +1130,14 @@ body:has(.experiment) {
 }
 
 .exp-terminal-tag {
-  font-family: var(--exp-mono);
-  font-size: 11px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   padding: 5px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--exp-text-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.5);
 }
 
 /* ── Reset command ── */
