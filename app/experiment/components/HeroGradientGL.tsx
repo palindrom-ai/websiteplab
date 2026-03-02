@@ -88,7 +88,15 @@ const fragmentShader = `
     vec2 pixelUv = floor(vUv * grid) / grid;
     vec3 pixelColor = getGradientColor(pixelUv);
 
-    // ═══ 3. ORGANIC REVEAL MASK (Gaussian falloff) ═══
+    // ═══ 3. CELL GRID LINES (thin dark borders between blocks) ═══
+    vec2 cellFrac = fract(vUv * grid);
+    float border = 0.035; // ~1.5px at 45px cells
+    float edgeX = step(cellFrac.x, border);
+    float edgeY = step(cellFrac.y, border);
+    float edge = max(edgeX, edgeY);
+    pixelColor = mix(pixelColor, pixelColor * 0.65, edge);
+
+    // ═══ 4. ORGANIC REVEAL MASK (Gaussian falloff) ═══
     float aspect = uResolution.x / uResolution.y;
     vec2 aspectVec = vec2(aspect, 1.0);
     float dist = distance(vUv * aspectVec, uMouse * aspectVec);
