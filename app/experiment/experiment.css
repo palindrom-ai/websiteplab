@@ -883,87 +883,81 @@ body:has(.experiment) {
    FIND YOUR FIT (interactive quiz)
    ============================================ */
 
-.exp-finder-steps {
+/* Dot progress indicator */
+.exp-finder-progress {
   display: flex;
   align-items: center;
   gap: 8px;
   margin-top: 24px;
-  font-family: var(--exp-mono);
-  font-size: 14px;
-  color: var(--exp-text-tertiary);
 }
 
+.exp-finder-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  transition: background 0.3s ease;
+}
+
+.exp-finder-dot--active {
+  background: var(--exp-text-primary);
+}
+
+/* Step container */
 .exp-finder-step {
-  opacity: 0.3;
-  transition: opacity 0.3s ease, color 0.3s ease;
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
-.exp-finder-step--active {
+.exp-finder-step--visible {
   opacity: 1;
-  color: var(--exp-text-primary);
 }
 
-.exp-finder-step-divider {
-  opacity: 0.3;
-}
-
-.exp-finder-question {
+/* Question number label */
+.exp-finder-question-num {
   font-family: var(--exp-mono);
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--exp-text-tertiary);
-  margin-bottom: 24px;
+  margin-bottom: 12px;
 }
 
-.exp-finder-option {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  padding: 20px 24px;
-  background: var(--exp-surface);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+/* Question heading */
+.exp-finder-question {
+  font-size: var(--exp-h3);
+  font-weight: 600;
   color: var(--exp-text-primary);
-  font-size: 15px;
+  margin: 0 0 24px 0;
+}
+
+/* Content area */
+.exp-finder-content {
+  min-height: 280px;
+}
+
+/* Chip buttons */
+.exp-finder-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.exp-finder-chip {
+  padding: 12px 20px;
+  background: var(--exp-surface);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--exp-text-primary);
+  font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   transition: border-color 0.3s ease, background 0.3s ease;
-  text-align: left;
-  margin-bottom: -1px;
+  border-radius: 0;
 }
 
-.exp-finder-option:first-of-type {
-  border-top-left-radius: 0;
-  border-top-right-radius: 0;
-}
-
-.exp-finder-option:hover {
-  border-color: rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.03);
-}
-
-.exp-finder-option-label {
-  flex: 1;
-}
-
-.exp-finder-option-desc {
-  font-size: 13px;
-  color: var(--exp-text-secondary);
-  margin-left: 16px;
-  flex: 2;
-}
-
-.exp-finder-option svg {
-  width: 14px;
-  height: 14px;
-  opacity: 0.4;
-  margin-left: 16px;
-  transition: opacity 0.3s ease, transform 0.3s ease;
-}
-
-.exp-finder-option:hover svg {
-  opacity: 1;
-  transform: translateX(4px);
+.exp-finder-chip:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 /* Result card */

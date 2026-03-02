@@ -7,17 +7,6 @@ import ArrowIcon from './ArrowIcon'
 type Role = 'ceo' | 'cto' | 'product' | 'commercial' | 'other'
 type Journey = 'exploring' | 'building' | 'scaling'
 
-interface RoleOption {
-  id: Role
-  label: string
-}
-
-interface JourneyOption {
-  id: Journey
-  label: string
-  desc: string
-}
-
 interface Recommendation {
   title: string
   desc: string
@@ -25,18 +14,18 @@ interface Recommendation {
   cta: string
 }
 
-const roles: RoleOption[] = [
-  { id: 'ceo', label: 'CEO / Founder' },
-  { id: 'cto', label: 'CTO / VP Engineering' },
-  { id: 'product', label: 'Product Leader' },
-  { id: 'commercial', label: 'Commercial Leader' },
-  { id: 'other', label: 'Other' },
+const roles = [
+  { id: 'ceo' as Role, label: 'CEO / Founder' },
+  { id: 'cto' as Role, label: 'CTO / VP Engineering' },
+  { id: 'product' as Role, label: 'Product Leader' },
+  { id: 'commercial' as Role, label: 'Commercial Leader' },
+  { id: 'other' as Role, label: 'Other' },
 ]
 
-const journeys: JourneyOption[] = [
-  { id: 'exploring', label: 'Exploring AI', desc: 'We\'re assessing where AI fits in our business' },
-  { id: 'building', label: 'Building with AI', desc: 'We have a clear use case and need to ship' },
-  { id: 'scaling', label: 'Scaling AI', desc: 'We have AI in production and need to grow it' },
+const journeys = [
+  { id: 'exploring' as Journey, label: 'Exploring AI' },
+  { id: 'building' as Journey, label: 'Building with AI' },
+  { id: 'scaling' as Journey, label: 'Scaling AI' },
 ]
 
 const recommendations: Record<string, Recommendation> = {
@@ -132,33 +121,55 @@ const recommendations: Record<string, Recommendation> = {
   },
 }
 
-// Binary scramble for transitions
-const SCRAMBLE_CHARS = '01'
-function scrambleText(text: string): string {
-  return text.split('').map(c =>
-    c === ' ' ? ' ' : SCRAMBLE_CHARS[Math.floor(Math.random() * 2)]
-  ).join('')
-}
-
 export default function FindYourFit() {
   const [step, setStep] = useState(0) // 0 = role, 1 = journey, 2 = result
   const [selectedRole, setSelectedRole] = useState<Role | null>(null)
   const [selectedJourney, setSelectedJourney] = useState<Journey | null>(null)
-  const resultRef = useRef<HTMLDivElement>(null)
+  const contentRef = useRef<HTMLDivElement>(null)
   const gsapRef = useRef<typeof import('gsap')['default'] | null>(null)
 
   useEffect(() => {
     import('gsap').then(mod => { gsapRef.current = mod.default })
   }, [])
 
+  // GSAP ScrollTrigger initial reveal
+  useEffect(() => {
+    let ctx: { revert: () => void } | null = null
+
+    const initGsap = async () => {
+      const { default: gsap } = await import('gsap')
+      const { ScrollTrigger } = await import('gsap/ScrollTrigger')
+      gsap.registerPlugin(ScrollTrigger)
+
+      const el = contentRef.current
+      if (!el) return
+
+      ctx = gsap.context(() => {
+        gsap.set(el, { y: 40, opacity: 0 })
+        gsap.to(el, {
+          y: 0,
+          opacity: 1,
+          duration: 0.8,
+          ease: 'power2.out',
+          scrollTrigger: {
+            trigger: el,
+            start: 'top 85%',
+            once: true,
+          },
+        })
+      })
+    }
+
+    initGsap()
+    return () => { ctx?.revert() }
+  }, [])
+
   const animateTransition = useCallback((callback: () => void) => {
     const gsap = gsapRef.current
-    if (!gsap) { callback(); return }
+    const el = contentRef.current
+    if (!gsap || !el) { callback(); return }
 
-    const container = document.querySelector('.exp-finder-options')
-    if (!container) { callback(); return }
-
-    gsap.to(container, {
+    gsap.to(el, {
       opacity: 0,
       y: -20,
       duration: 0.2,
@@ -167,13 +178,10 @@ export default function FindYourFit() {
         callback()
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
-            const newContainer = document.querySelector('.exp-finder-options')
-            if (newContainer) {
-              gsap.fromTo(newContainer,
-                { opacity: 0, y: 30 },
-                { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' }
-              )
-            }
+            gsap.fromTo(el,
+              { opacity: 0, y: 30 },
+              { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' }
+            )
           })
         })
       },
@@ -203,9 +211,9 @@ export default function FindYourFit() {
     : null
 
   return (
-    <div className="exp-12-grid exp-12-grid--half">
+    <div className="exp-12-grid exp-12-grid--half exp-finder">
       {/* Left column */}
-      <div className="exp-col-label">
+      <div className="exp-col-label exp-col-label--gradient">
         <div className="exp-tag">Interactive</div>
         <ScrollDecode
           text="Find Your Fit"
@@ -217,52 +225,54 @@ export default function FindYourFit() {
         <p className="exp-label-desc">
           Two quick questions. Your personalised recommendation in seconds.
         </p>
-        {/* Step indicator */}
-        <div className="exp-finder-steps">
-          <span className={`exp-finder-step ${step >= 0 ? 'exp-finder-step--active' : ''}`}>01</span>
-          <span className="exp-finder-step-divider">/</span>
-          <span className={`exp-finder-step ${step >= 1 ? 'exp-finder-step--active' : ''}`}>02</span>
+        {/* Dot progress indicator */}
+        <div className="exp-finder-progress" aria-hidden="true">
+          <div className={`exp-finder-dot${step >= 0 ? ' exp-finder-dot--active' : ''}`} />
+          <div className={`exp-finder-dot${step >= 1 ? ' exp-finder-dot--active' : ''}`} />
         </div>
       </div>
 
       {/* Right column — interactive quiz */}
-      <div className="exp-col-content">
+      <div ref={contentRef} className="exp-col-content exp-finder-content" aria-live="polite">
         {step === 0 && (
-          <div className="exp-finder-options">
-            <div className="exp-finder-question">What&apos;s your role?</div>
-            {roles.map(role => (
-              <button
-                key={role.id}
-                className="exp-finder-option"
-                onClick={() => handleRoleSelect(role.id)}
-              >
-                <span className="exp-finder-option-label">{role.label}</span>
-                <ArrowIcon />
-              </button>
-            ))}
+          <div className="exp-finder-step exp-finder-step--visible">
+            <div className="exp-finder-question-num">01 / 02</div>
+            <h3 className="exp-finder-question" tabIndex={-1}>What&apos;s your role?</h3>
+            <div className="exp-finder-chips">
+              {roles.map(role => (
+                <button
+                  key={role.id}
+                  className="exp-finder-chip"
+                  onClick={() => handleRoleSelect(role.id)}
+                >
+                  {role.label}
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
         {step === 1 && (
-          <div className="exp-finder-options">
-            <div className="exp-finder-question">Where are you on your AI journey?</div>
-            {journeys.map(j => (
-              <button
-                key={j.id}
-                className="exp-finder-option"
-                onClick={() => handleJourneySelect(j.id)}
-              >
-                <span className="exp-finder-option-label">{j.label}</span>
-                <span className="exp-finder-option-desc">{j.desc}</span>
-                <ArrowIcon />
-              </button>
-            ))}
+          <div className="exp-finder-step exp-finder-step--visible">
+            <div className="exp-finder-question-num">02 / 02</div>
+            <h3 className="exp-finder-question" tabIndex={-1}>Where are you on your AI journey?</h3>
+            <div className="exp-finder-chips">
+              {journeys.map(j => (
+                <button
+                  key={j.id}
+                  className="exp-finder-chip"
+                  onClick={() => handleJourneySelect(j.id)}
+                >
+                  {j.label}
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
         {step === 2 && recommendation && (
-          <div className="exp-finder-options" ref={resultRef}>
-            <div className="exp-finder-question">Your recommendation</div>
+          <div className="exp-finder-step exp-finder-step--visible">
+            <div className="exp-finder-question-num">Your recommendation</div>
             <div className="exp-finder-result">
               <div className="exp-finder-result-title">{recommendation.title}</div>
               <div className="exp-finder-result-desc">{recommendation.desc}</div>

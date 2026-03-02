@@ -2,33 +2,39 @@
 
 import { useEffect, useRef } from 'react'
 import ScrollDecode from './ScrollDecode'
+import CardIcon from './CardIcon'
 import ArrowIcon from './ArrowIcon'
 
 const commitments = [
   {
     id: '01',
-    title: 'Transparent Pricing',
-    desc: 'Fixed-scope, fixed-price engagements. No surprise invoices, no ballooning timelines. You know exactly what you\'re paying before we start.',
+    title: 'Proven success, every time',
+    desc: 'A playbook tested across industries. Senior engineers who\'ve done this before. Every engagement follows a methodology refined over dozens of deployments.',
+    icon: 'scale',
   },
   {
     id: '02',
-    title: 'Weekly Proof of Progress',
-    desc: 'Every Friday you get a working demo, not a slide deck. If you can\'t see it running, we haven\'t made progress.',
+    title: 'If it doesn\'t fit, we don\'t build it',
+    desc: 'We audit first and filter ruthlessly. Every engagement starts with a deep-dive assessment. If a use case doesn\'t pass our viability bar, you\'ll know before a line of code is written.',
+    icon: 'audit',
   },
   {
     id: '03',
-    title: 'Built to Last After We Leave',
-    desc: 'We write production code your team can maintain. Full documentation, knowledge transfer sessions, and zero vendor lock-in.',
+    title: 'Built to last after we leave',
+    desc: 'Documentation, training, and a named owner on your team. Your independence is our success metric. We design ourselves out of the job.',
+    icon: 'build',
   },
   {
     id: '04',
-    title: 'Your People, Upgraded',
-    desc: 'We don\'t just build — we upskill. Your engineers pair with ours so capability stays in-house long after the engagement ends.',
+    title: 'Your people, upgraded',
+    desc: 'Your engineers learn production AI patterns that stay long after we leave. We pair with your team daily, run workshops, and leave behind codified patterns and playbooks.',
+    icon: 'expert',
   },
   {
     id: '05',
-    title: 'Outcome-Aligned Incentives',
-    desc: 'We tie a portion of our fee to measurable outcomes. If the project doesn\'t hit agreed KPIs, we share the downside.',
+    title: 'Your success is our success',
+    desc: 'We don\'t just deliver and walk away. We stay accountable to results, measuring impact and iterating until the value is proven.',
+    icon: 'transform',
   },
 ]
 
@@ -143,6 +149,7 @@ export default function ConvergenceSection() {
             ref={(el) => { panelRefs.current[i] = el }}
             className="exp-panel"
           >
+            <CardIcon name={item.icon} />
             <div className="exp-panel-id">{item.id}</div>
             <div className="exp-panel-title">{item.title}</div>
             <div className="exp-panel-desc">{item.desc}</div>

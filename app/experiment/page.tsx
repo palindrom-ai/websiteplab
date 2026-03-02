@@ -5,8 +5,6 @@ import HeroSection from './components/HeroSection'
 import ExperimentNav from './components/ExperimentNav'
 import LogoMarquee from './components/LogoMarquee'
 import ProofSection from './components/ProofSection'
-import MethodSection from './components/MethodSection'
-import ServicesSection from './components/ServicesSection'
 import ConvergenceSection from './components/ConvergenceSection'
 import FindYourFit from './components/FindYourFit'
 import ExperimentTeamSection from './components/ExperimentTeamSection'
@@ -46,22 +44,14 @@ export default function ExperimentPage() {
       <PlusDivider />
 
       <section id="method">
-        <MethodSection />
+        <ConvergenceSection />
       </section>
 
       <PlusDivider />
 
       <section id="services">
-        <ServicesSection />
+        <FindYourFit />
       </section>
-
-      <PlusDivider />
-
-      <ConvergenceSection />
-
-      <PlusDivider />
-
-      <FindYourFit />
 
       <PlusDivider />
 
