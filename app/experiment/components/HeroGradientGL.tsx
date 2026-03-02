@@ -37,46 +37,94 @@ const fragmentShader = `
     return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
   }
 
-  // ─── Gradient ramp: black bottom → saturated peak → white top edge ───
-  vec3 computeGradient(float gp, vec3 peak) {
+  // ─── Smooth 2D value noise for organic color movement ───
+  float vnoise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    f = f * f * (3.0 - 2.0 * f); // smoothstep interpolation
+    float a = hash(i);
+    float b = hash(i + vec2(1.0, 0.0));
+    float c = hash(i + vec2(0.0, 1.0));
+    float d = hash(i + vec2(1.0, 1.0));
+    return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+  }
+
+  // ─── Organic dual-color gradient: colors swirl together, bottom stays dark ───
+  vec3 computeGradient(vec2 uv, float time, vec3 peakA, vec3 peakB) {
+    float gp = uv.y;
+
+    // ── Color swirl: noise-driven blend between peakA and peakB ──
+    // Three octaves: large slow clouds + medium detail + fine texture
+    float n1 = vnoise(uv * 1.8 + vec2(time * 0.10, time * 0.07));
+    float n2 = vnoise(uv * 3.5 + vec2(-time * 0.08, time * 0.12));
+    float n3 = vnoise(uv * 6.0 + vec2(time * 0.15, -time * 0.06));
+    float swirl = n1 * 0.5 + n2 * 0.3 + n3 * 0.2;
+
+    // Very wide vertical transition — colors can appear almost anywhere,
+    // noise pushes ±0.5 so the boundary is completely diffuse
+    float verticalBias = smoothstep(0.05, 0.95, gp);
+    float colorMix = clamp(verticalBias + (swirl - 0.5) * 1.0, 0.0, 1.0);
+    vec3 peak = mix(peakA, peakB, colorMix);
+
+    // ── Subtle luminance wave: bands aren't perfectly horizontal ──
+    // Protected at the bottom so the dark zone never shifts
+    float wave = (vnoise(uv * 2.0 + vec2(time * 0.06, -time * 0.04)) - 0.5) * 0.06;
+    float protection = smoothstep(0.0, 0.25, gp);
+    gp = clamp(gp + wave * protection, 0.0, 1.0);
+
+    // ── Smooth luminance ramp: overlapping smoothsteps eliminate visible seams ──
     vec3 deep = peak * 0.06;
     vec3 mid  = peak * 0.35;
-    vec3 hot  = peak * 1.0;
-    vec3 wash = mix(peak, vec3(1.0), 0.5);   // 50% desaturated toward white
-    if (gp < 0.04) return mix(vec3(0.004), deep, gp / 0.04);         // near-black
-    else if (gp < 0.18) return mix(deep, mid, (gp - 0.04) / 0.14);   // dark tint
-    else if (gp < 0.45) return mix(mid, hot, (gp - 0.18) / 0.27);    // ramp to full color
-    else if (gp < 0.72) return mix(hot, wash, (gp - 0.45) / 0.27);   // desaturate
-    else return mix(wash, vec3(1.0), (gp - 0.72) / 0.28);            // push to white
+    vec3 wash = mix(peak, vec3(1.0), 0.5);
+
+    float t1 = smoothstep(0.00, 0.10, gp);  // black → deep
+    float t2 = smoothstep(0.06, 0.24, gp);  // deep → mid
+    float t3 = smoothstep(0.15, 0.55, gp);  // mid → peak
+    float t4 = smoothstep(0.45, 0.85, gp);  // peak → wash
+    float t5 = smoothstep(0.75, 1.00, gp);  // wash → white
+
+    vec3 color = mix(vec3(0.004), deep, t1);
+    color = mix(color, mid, t2);
+    color = mix(color, peak, t3);
+    color = mix(color, wash, t4);
+    color = mix(color, vec3(1.0), t5);
+    return color;
   }
 
   // ═══ 1. PURE COLOR GENERATION ═══
   // Self-contained: takes any UV, returns the gradient color at that point
-  // including time-based brand color cycling.
+  // including time-based brand color cycling with dual-color pairings.
   vec3 getGradientColor(vec2 uv) {
-    // Progression Labs brand palette — 5 colors over 30s cycle
+    // Progression Labs brand palette
     vec3 cOrchid    = vec3(0.729, 0.333, 0.827); // #BA55D3
     vec3 cSalmon    = vec3(1.000, 0.627, 0.478); // #FFA07A
     vec3 cGreen     = vec3(0.725, 0.914, 0.475); // #B9E979
     vec3 cTurquoise = vec3(0.251, 0.878, 0.816); // #40E0D0
     vec3 cBlue      = vec3(0.000, 0.000, 1.000); // #0000FF
 
-    float cycleSec = 30.0;
+    // 9 states over 45s cycle — singles and dual-color pairings
+    // Each state is a [bottom, top] pair; singles have both the same.
+    float cycleSec = 45.0;
     float progress = mod(uTime, cycleSec) / cycleSec;
-    float segProgress = progress * 5.0;
+    float segProgress = progress * 9.0;
     int segIndex = int(floor(segProgress));
     float t = ssmooth(segProgress - floor(segProgress));
 
-    vec3 fromColor, toColor;
-    if (segIndex == 0)      { fromColor = cOrchid;    toColor = cSalmon;    }
-    else if (segIndex == 1) { fromColor = cSalmon;    toColor = cGreen;     }
-    else if (segIndex == 2) { fromColor = cGreen;     toColor = cTurquoise; }
-    else if (segIndex == 3) { fromColor = cTurquoise; toColor = cBlue;      }
-    else                    { fromColor = cBlue;      toColor = cOrchid;    }
+    // Current state pair [fromA, fromB] → next state pair [toA, toB]
+    vec3 fromA, fromB, toA, toB;
+    if (segIndex == 0)      { fromA = cOrchid;    fromB = cOrchid;    toA = cBlue;      toB = cSalmon;    } // orchid → blue+salmon
+    else if (segIndex == 1) { fromA = cBlue;      fromB = cSalmon;    toA = cGreen;     toB = cGreen;     } // blue+salmon → green
+    else if (segIndex == 2) { fromA = cGreen;     fromB = cGreen;     toA = cOrchid;    toB = cTurquoise; } // green → orchid+turquoise
+    else if (segIndex == 3) { fromA = cOrchid;    fromB = cTurquoise; toA = cSalmon;    toB = cSalmon;    } // orchid+turquoise → salmon
+    else if (segIndex == 4) { fromA = cSalmon;    fromB = cSalmon;    toA = cBlue;      toB = cTurquoise; } // salmon → blue+turquoise
+    else if (segIndex == 5) { fromA = cBlue;      fromB = cTurquoise; toA = cBlue;      toB = cBlue;      } // blue+turquoise → blue
+    else if (segIndex == 6) { fromA = cBlue;      fromB = cBlue;      toA = cOrchid;    toB = cGreen;     } // blue → orchid+green
+    else if (segIndex == 7) { fromA = cOrchid;    fromB = cGreen;     toA = cTurquoise; toB = cTurquoise; } // orchid+green → turquoise
+    else                    { fromA = cTurquoise; fromB = cTurquoise; toA = cOrchid;    toB = cOrchid;    } // turquoise → orchid (loop)
 
-    vec3 peakColor = mix(fromColor, toColor, t);
-    float gp = uv.y;
-    return computeGradient(gp, peakColor);
+    vec3 peakA = mix(fromA, toA, t);
+    vec3 peakB = mix(fromB, toB, t);
+    return computeGradient(uv, uTime, peakA, peakB);
   }
 
   void main() {

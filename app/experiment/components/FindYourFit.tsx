@@ -19,7 +19,7 @@ function ssmooth(t: number) { return t * t * (3 - 2 * t) }
 const TYPING_SPEED = 35 // ms per character
 
 type Role = 'ceo' | 'cto' | 'product' | 'commercial' | 'other'
-type Journey = 'exploring' | 'building' | 'scaling'
+type Journey = 'no_start' | 'know_what' | 'stuck' | 'need_hands' | 'scaling'
 
 interface Recommendation {
   title: string
@@ -37,23 +37,38 @@ const roles = [
 ]
 
 const journeys = [
-  { id: 'exploring' as Journey, label: 'Exploring AI' },
-  { id: 'building' as Journey, label: 'Building with AI' },
-  { id: 'scaling' as Journey, label: 'Scaling AI' },
+  { id: 'no_start' as Journey, label: "We haven't started with AI" },
+  { id: 'know_what' as Journey, label: 'We know what we want to build' },
+  { id: 'stuck' as Journey, label: "We started but hit a wall" },
+  { id: 'need_hands' as Journey, label: "We're building, need more hands" },
+  { id: 'scaling' as Journey, label: "We're live and need to scale" },
 ]
 
 const recommendations: Record<string, Recommendation> = {
-  'ceo-exploring': {
+  // ── CEO / Founder ──
+  'ceo-no_start': {
     title: 'AI Transformation + Ideation Sessions',
     desc: 'Start with a strategic assessment to identify high-impact AI opportunities, then run structured workshops with your leadership team to build conviction and a concrete roadmap.',
     services: ['AI Transformation', 'Ideation Sessions', 'AI Audit'],
     cta: 'Book a strategy session',
   },
-  'ceo-building': {
+  'ceo-know_what': {
     title: 'AI Builds + AI Expert',
     desc: 'Full-stack AI product development with senior engineers embedded in your team. We build production software, not prototypes — and your team learns alongside ours.',
     services: ['AI Builds', 'AI Expert'],
     cta: 'Start building',
+  },
+  'ceo-stuck': {
+    title: 'Project Surgery + AI Expert',
+    desc: 'We diagnose what stalled — architecture, data, vendor lock-in, or team gaps — then fix it. Our senior engineers embed with your team to unblock and set up for long-term success.',
+    services: ['Project Surgery', 'AI Expert', 'AI Audit'],
+    cta: 'Unblock your project',
+  },
+  'ceo-need_hands': {
+    title: 'AI Expert + AI Builds',
+    desc: 'On-demand senior AI engineers who embed within your team immediately. No hiring lag, no ramp-up — production-ready talent that ships from week one.',
+    services: ['AI Expert', 'AI Builds'],
+    cta: 'Add senior talent',
   },
   'ceo-scaling': {
     title: 'AI Transformation + AI Expert',
@@ -61,17 +76,31 @@ const recommendations: Record<string, Recommendation> = {
     services: ['AI Transformation', 'AI Expert', 'AI Audit'],
     cta: 'Scale with us',
   },
-  'cto-exploring': {
+
+  // ── CTO / VP Engineering ──
+  'cto-no_start': {
     title: 'AI Audit + Ideation Sessions',
     desc: 'Deep-dive technical assessment of your AI readiness — infrastructure, data, team skills. We deliver a prioritised roadmap your engineering team can execute.',
     services: ['AI Audit', 'Ideation Sessions'],
     cta: 'Get your audit',
   },
-  'cto-building': {
-    title: 'AI Builds + Project Surgery',
-    desc: 'Our senior engineers pair with yours to build production AI. If you have stalled projects, we diagnose and fix. Code you own, knowledge you keep.',
-    services: ['AI Builds', 'AI Expert', 'Project Surgery'],
+  'cto-know_what': {
+    title: 'AI Builds + AI Expert',
+    desc: 'Our senior engineers pair with yours to build production AI. Code you own, knowledge you keep. We handle the ML complexity so your team stays focused.',
+    services: ['AI Builds', 'AI Expert'],
     cta: 'Start building',
+  },
+  'cto-stuck': {
+    title: 'Project Surgery + AI Audit',
+    desc: 'We diagnose the technical blockers — architecture, data pipeline, model performance, or integration issues — and get your project back on track with a clear fix.',
+    services: ['Project Surgery', 'AI Audit', 'AI Expert'],
+    cta: 'Fix what\'s broken',
+  },
+  'cto-need_hands': {
+    title: 'AI Expert + AI Builds',
+    desc: 'Senior AI engineers who embed in your team and ship from day one. No recruitment cycles, no ramp-up — they know the stack and hit the ground running.',
+    services: ['AI Expert', 'AI Builds'],
+    cta: 'Add senior talent',
   },
   'cto-scaling': {
     title: 'AI Expert + AI Builds',
@@ -79,17 +108,31 @@ const recommendations: Record<string, Recommendation> = {
     services: ['AI Expert', 'AI Builds'],
     cta: 'Scale your team',
   },
-  'product-exploring': {
+
+  // ── Product Leader ──
+  'product-no_start': {
     title: 'Ideation Sessions + AI Audit',
     desc: 'Structured workshops that turn product challenges into AI-powered features. Leave with prototyped concepts and a concrete action plan.',
     services: ['Ideation Sessions', 'AI Audit'],
     cta: 'Book a workshop',
   },
-  'product-building': {
+  'product-know_what': {
     title: 'AI Builds + AI Expert',
     desc: 'End-to-end AI product development. We work alongside your product team from spec to ship, building features your users will love.',
     services: ['AI Builds', 'AI Expert'],
     cta: 'Ship your feature',
+  },
+  'product-stuck': {
+    title: 'Project Surgery + AI Builds',
+    desc: 'We diagnose why the feature stalled — scope, data, model fit, or UX — then rebuild with a clear path to ship. No more spinning wheels.',
+    services: ['Project Surgery', 'AI Builds'],
+    cta: 'Get unstuck',
+  },
+  'product-need_hands': {
+    title: 'AI Expert + AI Builds',
+    desc: 'Senior AI product engineers who slot into your team and ship features. They understand product thinking, not just model training.',
+    services: ['AI Expert', 'AI Builds'],
+    cta: 'Accelerate your roadmap',
   },
   'product-scaling': {
     title: 'AI Expert + AI Transformation',
@@ -97,17 +140,31 @@ const recommendations: Record<string, Recommendation> = {
     services: ['AI Expert', 'AI Transformation'],
     cta: 'Level up your team',
   },
-  'commercial-exploring': {
+
+  // ── Commercial Leader ──
+  'commercial-no_start': {
     title: 'AI Transformation + Ideation Sessions',
     desc: 'Understand where AI creates commercial value. We map opportunities across your business and help you build the case for investment.',
     services: ['AI Transformation', 'Ideation Sessions'],
     cta: 'Explore opportunities',
   },
-  'commercial-building': {
+  'commercial-know_what': {
     title: 'AI Builds + AI Transformation',
     desc: 'Turn commercial AI opportunities into working products. We build the tools and automations that drive revenue and efficiency.',
     services: ['AI Builds', 'AI Transformation'],
     cta: 'Build for growth',
+  },
+  'commercial-stuck': {
+    title: 'Project Surgery + AI Transformation',
+    desc: 'We diagnose why your AI initiative isn\'t delivering commercial results — misaligned KPIs, wrong use case, or execution gaps — and course-correct.',
+    services: ['Project Surgery', 'AI Transformation'],
+    cta: 'Course-correct now',
+  },
+  'commercial-need_hands': {
+    title: 'AI Builds + AI Expert',
+    desc: 'More engineering capacity to ship your commercial AI projects. Our team builds the tools and integrations that drive measurable business impact.',
+    services: ['AI Builds', 'AI Expert'],
+    cta: 'Add capacity',
   },
   'commercial-scaling': {
     title: 'AI Transformation + AI Expert',
@@ -115,17 +172,31 @@ const recommendations: Record<string, Recommendation> = {
     services: ['AI Transformation', 'AI Expert'],
     cta: 'Scale your AI',
   },
-  'other-exploring': {
+
+  // ── Other ──
+  'other-no_start': {
     title: 'AI Audit + Ideation Sessions',
     desc: 'Start with a comprehensive assessment and hands-on workshop. We\'ll help you find the right starting point for your AI journey.',
     services: ['AI Audit', 'Ideation Sessions'],
     cta: 'Get started',
   },
-  'other-building': {
+  'other-know_what': {
     title: 'AI Builds + AI Expert',
     desc: 'Full-stack AI development with senior engineers. We build production-grade software tailored to your specific needs.',
     services: ['AI Builds', 'AI Expert'],
     cta: 'Start building',
+  },
+  'other-stuck': {
+    title: 'Project Surgery + AI Audit',
+    desc: 'We diagnose what\'s blocking progress and chart a clear path forward. Fresh eyes and deep AI expertise to get things moving again.',
+    services: ['Project Surgery', 'AI Audit'],
+    cta: 'Get unstuck',
+  },
+  'other-need_hands': {
+    title: 'AI Expert + AI Builds',
+    desc: 'Experienced AI engineers who embed with your team. They ramp fast, ship real code, and transfer knowledge as they go.',
+    services: ['AI Expert', 'AI Builds'],
+    cta: 'Add AI talent',
   },
   'other-scaling': {
     title: 'AI Expert + AI Transformation',

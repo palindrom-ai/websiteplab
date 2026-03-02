@@ -945,7 +945,7 @@ body:has(.experiment) {
 }
 
 .exp-finder-content {
-  min-height: 420px;
+  min-height: 560px;
 }
 
 /* ── Terminal container ── */
@@ -957,7 +957,7 @@ body:has(.experiment) {
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 10px;
-  padding: 0 28px 28px;
+  padding: 0 32px 40px;
   position: relative;
   overflow: hidden;
 }
