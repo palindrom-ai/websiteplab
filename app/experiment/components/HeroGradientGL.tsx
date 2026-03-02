@@ -97,7 +97,7 @@ const fragmentShader = `
     float aspect = uResolution.x / uResolution.y;
     vec2 aspectVec = vec2(aspect, 1.0);
     float dist = distance(vUv * aspectVec, uMouse * aspectVec);
-    float mask = exp(-dist * dist * 6.0) * uMouseActive;
+    float mask = exp(-dist * dist * 18.0) * uMouseActive;
 
     // ═══ 4. PURE COLOR BLENDING ═══
     vec3 finalColor = mix(smoothColor, pixelColor, mask);
