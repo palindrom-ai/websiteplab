@@ -1,5 +1,6 @@
 'use client'
 
+import { useRef, useEffect, useCallback } from 'react'
 import ScrollDecode from './ScrollDecode'
 import PanelCorners from './PanelCorners'
 
@@ -18,15 +19,157 @@ function getInitials(name: string): string {
   return name.split(' ').map(n => n[0]).join('').toUpperCase()
 }
 
+const SHUFFLE_CHARS = '01'
+const SHUFFLE_INTERVAL = 60
+const SHUFFLE_TIMEOUT = 500
+
 /**
- * ExperimentTeamSection — Infinite auto-scroll marquee of team member cards.
- * Duplicates the array for seamless looping via CSS translateX(-50%).
- * Pauses on hover. No navigation buttons or dots.
+ * PixelAvatar — Renders a photo pixelated by default (via tiny canvas),
+ * with a glitch de-pixelation reveal on hover.
+ */
+function PixelAvatar({ src, alt }: { src: string; alt: string }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const imgRef = useRef<HTMLImageElement>(null)
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    const img = imgRef.current
+    if (!canvas || !img) return
+
+    const draw = () => {
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return
+      // Draw the full image into a tiny 12x12 canvas — browser upscales with pixelated rendering
+      canvas.width = 12
+      canvas.height = 12
+      ctx.drawImage(img, 0, 0, 12, 12)
+    }
+
+    if (img.complete && img.naturalWidth > 0) {
+      draw()
+    } else {
+      img.addEventListener('load', draw)
+      return () => img.removeEventListener('load', draw)
+    }
+  }, [src])
+
+  return (
+    <div className="exp-team-pixel-wrap">
+      {/* Hidden source image — used to draw canvas and shown on hover */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        ref={imgRef}
+        src={src}
+        alt={alt}
+        className="exp-team-clean-img"
+      />
+      {/* Pixelated overlay — visible by default, fades out on hover */}
+      <canvas
+        ref={canvasRef}
+        className="exp-team-pixel-canvas"
+      />
+      {/* Glitch slices — visible only during hover transition */}
+      <div className="exp-team-glitch-slices" aria-hidden="true">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={src} alt="" className="exp-team-glitch-slice exp-team-glitch-1" />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={src} alt="" className="exp-team-glitch-slice exp-team-glitch-2" />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={src} alt="" className="exp-team-glitch-slice exp-team-glitch-3" />
+      </div>
+    </div>
+  )
+}
+
+/**
+ * InitialsAvatar — Shows initials with a binary scramble on hover
+ * (reuses ShuffleHover pattern inline to keep it self-contained).
+ */
+function InitialsAvatar({ name }: { name: string }) {
+  const initials = getInitials(name)
+  const elRef = useRef<HTMLSpanElement>(null)
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const clearTimers = useCallback(() => {
+    if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null }
+    if (timeoutRef.current) { clearTimeout(timeoutRef.current); timeoutRef.current = null }
+  }, [])
+
+  const handleMouseEnter = useCallback(() => {
+    const el = elRef.current
+    if (!el) return
+    clearTimers()
+    intervalRef.current = setInterval(() => {
+      el.textContent = initials
+        .split('')
+        .map(() => SHUFFLE_CHARS[Math.floor(Math.random() * 2)])
+        .join('')
+    }, SHUFFLE_INTERVAL)
+    timeoutRef.current = setTimeout(() => {
+      clearTimers()
+      if (el) el.textContent = initials
+    }, SHUFFLE_TIMEOUT)
+  }, [initials, clearTimers])
+
+  const handleMouseLeave = useCallback(() => {
+    clearTimers()
+    if (elRef.current) elRef.current.textContent = initials
+  }, [initials, clearTimers])
+
+  return (
+    <span
+      ref={elRef}
+      className="exp-team-initials"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      {initials}
+    </span>
+  )
+}
+
+/**
+ * MarqueeRow — A single row of team cards that scrolls infinitely.
+ * direction="left" (default) or "right" for counter-scrolling.
+ */
+function MarqueeRow({ direction = 'left', speed = '25s' }: { direction?: 'left' | 'right'; speed?: string }) {
+  const doubled = [...teamMembers, ...teamMembers]
+  const trackClass = direction === 'right'
+    ? 'exp-team-marquee-track exp-team-marquee-reverse'
+    : 'exp-team-marquee-track'
+
+  return (
+    <div className="exp-team-single">
+      <div className={trackClass} style={{ animationDuration: speed }}>
+        {doubled.map((member, i) => (
+          <div className="exp-team-single-card" key={`${member.name}-${direction}-${i}`}>
+            <PanelCorners />
+            <div className="exp-team-avatar">
+              {member.imageUrl ? (
+                <PixelAvatar src={member.imageUrl} alt={member.name} />
+              ) : (
+                <InitialsAvatar name={member.name} />
+              )}
+            </div>
+            <div className="exp-team-info">
+              <div className="exp-team-id">{String((i % teamMembers.length) + 1).padStart(2, '0')}</div>
+              <div className="exp-team-name">{member.name}</div>
+              <div className="exp-team-role">{member.role}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/**
+ * ExperimentTeamSection — Two-row counter-scrolling marquee of team cards.
+ * Row 1 scrolls left at 25s, Row 2 scrolls right at 30s for visual variety.
+ * Photos are pixelated by default; hover triggers a glitch de-pixelation reveal.
  */
 export default function ExperimentTeamSection() {
-  // Duplicate for seamless CSS loop
-  const doubled = [...teamMembers, ...teamMembers]
-
   return (
     <div className="exp-team-section">
       <div className="exp-team-header">
@@ -40,31 +183,9 @@ export default function ExperimentTeamSection() {
         />
       </div>
 
-      <div className="exp-team-single">
-        <div className="exp-team-marquee-track">
-          {doubled.map((member, i) => (
-            <div className="exp-team-single-card" key={`${member.name}-${i}`}>
-              <PanelCorners />
-              <div className="exp-team-avatar">
-                {member.imageUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={member.imageUrl}
-                    alt={member.name}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'grayscale(1)' }}
-                  />
-                ) : (
-                  <span className="exp-team-initials">{getInitials(member.name)}</span>
-                )}
-              </div>
-              <div className="exp-team-info">
-                <div className="exp-team-id">{String((i % teamMembers.length) + 1).padStart(2, '0')}</div>
-                <div className="exp-team-name">{member.name}</div>
-                <div className="exp-team-role">{member.role}</div>
-              </div>
-            </div>
-          ))}
-        </div>
+      <div className="exp-team-rows">
+        <MarqueeRow direction="left" speed="25s" />
+        <MarqueeRow direction="right" speed="30s" />
       </div>
     </div>
   )

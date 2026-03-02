@@ -893,6 +893,13 @@ body:has(.experiment) {
   margin-bottom: 48px;
 }
 
+/* --- Two-row wrapper --- */
+.exp-team-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
 /* --- Infinite marquee container --- */
 .exp-team-single {
   position: relative;
@@ -908,6 +915,11 @@ body:has(.experiment) {
   animation: team-scroll 25s linear infinite;
 }
 
+/* Reverse direction for row 2 */
+.exp-team-marquee-reverse {
+  animation-name: team-scroll-reverse;
+}
+
 .exp-team-marquee-track:hover {
   animation-play-state: paused;
 }
@@ -915,6 +927,11 @@ body:has(.experiment) {
 @keyframes team-scroll {
   0% { transform: translateX(0); }
   100% { transform: translateX(-50%); }
+}
+
+@keyframes team-scroll-reverse {
+  0% { transform: translateX(-50%); }
+  100% { transform: translateX(0); }
 }
 
 .exp-team-single-card {
@@ -942,24 +959,141 @@ body:has(.experiment) {
   overflow: hidden;
 }
 
-.exp-team-avatar img {
+/* --- Pixel Avatar (photo cards) --- */
+.exp-team-pixel-wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* Clean image — hidden by default, revealed on hover */
+.exp-team-clean-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   filter: grayscale(1);
-  transition: filter 0.3s ease;
+  transition: filter 0.4s ease;
 }
 
-.exp-team-single-card:hover .exp-team-avatar img {
-  filter: grayscale(0.5);
+.exp-team-single-card:hover .exp-team-clean-img {
+  filter: grayscale(0.3);
 }
 
+/* Pixelated canvas overlay — sits on top, fades out on hover */
+.exp-team-pixel-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  filter: grayscale(1);
+  opacity: 1;
+  transition: opacity 0.35s ease 0.15s; /* slight delay so glitch plays first */
+  pointer-events: none;
+}
+
+.exp-team-single-card:hover .exp-team-pixel-canvas {
+  opacity: 0;
+}
+
+/* --- Glitch slices — 3 copies of the image clipped to horizontal bands --- */
+.exp-team-glitch-slices {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.exp-team-single-card:hover .exp-team-glitch-slices {
+  animation: team-glitch-flash 0.35s steps(1) forwards;
+}
+
+.exp-team-glitch-slice {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(1);
+}
+
+.exp-team-glitch-1 {
+  clip-path: inset(0 0 66% 0);
+}
+.exp-team-glitch-2 {
+  clip-path: inset(33% 0 33% 0);
+}
+.exp-team-glitch-3 {
+  clip-path: inset(66% 0 0 0);
+}
+
+/* Glitch flash: slices appear briefly with offsets then disappear */
+@keyframes team-glitch-flash {
+  0%   { opacity: 1; }
+  10%  { opacity: 1; transform: translate(8px, 0); }
+  20%  { opacity: 1; transform: translate(-6px, 0); }
+  30%  { opacity: 1; transform: translate(4px, 0); }
+  40%  { opacity: 1; transform: translate(-3px, 0); }
+  50%  { opacity: 1; transform: translate(2px, 0); }
+  60%  { opacity: 0.8; transform: translate(-1px, 0); }
+  80%  { opacity: 0.3; transform: translate(0, 0); }
+  100% { opacity: 0; transform: translate(0, 0); }
+}
+
+/* Individual slice offsets during the glitch */
+.exp-team-single-card:hover .exp-team-glitch-1 {
+  animation: team-glitch-slice-1 0.35s steps(2) forwards;
+}
+.exp-team-single-card:hover .exp-team-glitch-2 {
+  animation: team-glitch-slice-2 0.35s steps(2) forwards;
+}
+.exp-team-single-card:hover .exp-team-glitch-3 {
+  animation: team-glitch-slice-3 0.35s steps(2) forwards;
+}
+
+@keyframes team-glitch-slice-1 {
+  0%   { transform: translateX(0); }
+  25%  { transform: translateX(6px); }
+  50%  { transform: translateX(-4px); }
+  75%  { transform: translateX(2px); }
+  100% { transform: translateX(0); }
+}
+@keyframes team-glitch-slice-2 {
+  0%   { transform: translateX(0); }
+  25%  { transform: translateX(-8px); }
+  50%  { transform: translateX(5px); }
+  75%  { transform: translateX(-2px); }
+  100% { transform: translateX(0); }
+}
+@keyframes team-glitch-slice-3 {
+  0%   { transform: translateX(0); }
+  25%  { transform: translateX(4px); }
+  50%  { transform: translateX(-6px); }
+  75%  { transform: translateX(3px); }
+  100% { transform: translateX(0); }
+}
+
+/* --- Initials cards — border glow on hover --- */
 .exp-team-initials {
   font-family: var(--exp-mono);
   font-size: 24px;
   font-weight: 300;
   color: var(--exp-text-tertiary);
   letter-spacing: 0.05em;
+  cursor: default;
+  transition: color 0.3s ease, text-shadow 0.3s ease;
+}
+
+.exp-team-single-card:hover .exp-team-initials {
+  color: var(--exp-text-secondary);
+  text-shadow: 0 0 12px rgba(255, 255, 255, 0.15);
+}
+
+/* Card border glow on hover for initials cards */
+.exp-team-single-card:has(.exp-team-initials):hover {
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: inset 0 0 30px rgba(255, 255, 255, 0.02);
 }
 
 .exp-team-info {
@@ -986,8 +1120,6 @@ body:has(.experiment) {
   font-size: 12px;
   color: var(--exp-text-secondary);
 }
-
-/* Old carousel nav/dots removed — replaced by infinite marquee */
 
 /* ============================================
    CTA
