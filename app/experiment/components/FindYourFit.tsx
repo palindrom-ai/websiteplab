@@ -4,6 +4,7 @@ import { useState, useCallback, useRef, useEffect } from 'react'
 import ScrollDecode from './ScrollDecode'
 import ArrowIcon from './ArrowIcon'
 import PulsingGrid from './PulsingGrid'
+import PixelPulse from './PixelPulse'
 
 // Brand palette (synced with hero shader)
 const BRAND_COLORS: [number, number, number][] = [
@@ -461,6 +462,9 @@ export default function FindYourFit() {
           {/* Step 1: Journey selection */}
           {step === 1 && (
             <div className="exp-finder-step exp-finder-step--visible">
+              <div style={{ marginBottom: 16 }}>
+                <PixelPulse size={48} />
+              </div>
               <div className="exp-terminal-prompt">
                 <span className="exp-terminal-caret">&gt;</span>
                 <span className="exp-terminal-text">Where are you on your AI journey?</span>
