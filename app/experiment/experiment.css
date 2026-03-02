@@ -953,7 +953,7 @@ body:has(.experiment) {
   --t-accent: rgb(186, 85, 211);
   --t-accent-dim: rgba(186, 85, 211, 0.12);
   --t-accent-glow: rgba(186, 85, 211, 0.2);
-  font-family: var(--exp-mono);
+  font-family: 'Inter', sans-serif;
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 10px;
@@ -1000,6 +1000,7 @@ body:has(.experiment) {
 
 .exp-terminal-title {
   margin-left: 10px;
+  font-family: var(--exp-mono);
   font-size: 11px;
   color: rgba(255, 255, 255, 0.3);
   letter-spacing: 0.03em;
@@ -1014,6 +1015,7 @@ body:has(.experiment) {
 }
 
 .exp-terminal-caret {
+  font-family: var(--exp-mono);
   color: var(--t-accent);
   font-weight: 700;
   font-size: 1rem;
@@ -1050,7 +1052,6 @@ body:has(.experiment) {
 }
 
 .exp-terminal-key {
-  font-family: var(--exp-mono);
   font-size: 0.82rem;
   padding: 12px 20px;
   background: rgba(255, 255, 255, 0.025);
@@ -1095,6 +1096,7 @@ body:has(.experiment) {
 }
 
 .exp-terminal-divider {
+  font-family: var(--exp-mono);
   color: rgba(255, 255, 255, 0.2);
   font-size: 0.75rem;
   letter-spacing: 0.15em;
