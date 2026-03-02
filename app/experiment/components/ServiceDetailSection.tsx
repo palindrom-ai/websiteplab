@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from 'react'
 import ScrollDecode from './ScrollDecode'
-import CardIcon from './CardIcon'
 import PanelCorners from './PanelCorners'
 import ArrowIcon from './ArrowIcon'
 
@@ -106,12 +105,11 @@ export default function ServiceDetailSection() {
       if (cards.length === 0) return
 
       ctx = gsap.context(() => {
-        gsap.set(cards, { y: 60, opacity: 0 })
+        gsap.set(cards, { opacity: 0 })
         gsap.to(cards, {
-          y: 0,
           opacity: 1,
-          duration: 1.0,
-          stagger: 0.15,
+          duration: 0.8,
+          stagger: 0.12,
           ease: 'power2.out',
           scrollTrigger: {
             trigger: el,
@@ -144,10 +142,10 @@ export default function ServiceDetailSection() {
 
       {/* Main services — large cards */}
       <div className="exp-detail-grid exp-detail-grid--main">
-        {mainServices.map((svc) => (
-          <div key={svc.title} className="exp-detail-card exp-panel">
+        {mainServices.map((svc, i) => (
+          <div key={svc.title} className="exp-detail-card">
             <PanelCorners />
-            <CardIcon name={svc.icon} />
+            <div className="exp-detail-card-num">{String(i + 1).padStart(2, '0')}</div>
             <div className="exp-detail-card-title">{svc.title}</div>
             <div className="exp-detail-card-desc">{svc.description}</div>
             <ul className="exp-detail-bullets">
@@ -163,19 +161,12 @@ export default function ServiceDetailSection() {
 
       {/* Supporting services — smaller cards */}
       <div className="exp-detail-grid exp-detail-grid--supporting">
-        {supportingServices.map((svc) => (
-          <div key={svc.title} className="exp-detail-card exp-detail-card--small exp-panel">
+        {supportingServices.map((svc, i) => (
+          <div key={svc.title} className="exp-detail-card exp-detail-card--small">
             <PanelCorners />
-            <CardIcon name={svc.icon} />
+            <div className="exp-detail-card-num">{String(i + 4).padStart(2, '0')}</div>
             <div className="exp-detail-card-title">{svc.title}</div>
             <div className="exp-detail-card-desc">{svc.description}</div>
-            <ul className="exp-detail-bullets">
-              {svc.bullets.map((b) => (
-                <li key={b}>
-                  <span className="exp-detail-bullet-plus">+</span> {b}
-                </li>
-              ))}
-            </ul>
           </div>
         ))}
       </div>

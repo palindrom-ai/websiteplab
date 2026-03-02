@@ -192,9 +192,8 @@ export default function FindYourFit() {
       if (!el) return
 
       ctx = gsap.context(() => {
-        gsap.set(el, { y: 40, opacity: 0 })
+        gsap.set(el, { opacity: 0 })
         gsap.to(el, {
-          y: 0,
           opacity: 1,
           duration: 0.8,
           ease: 'power2.out',

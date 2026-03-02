@@ -66,12 +66,11 @@ export default function BlogSection() {
       if (cards.length === 0) return
 
       ctx = gsap.context(() => {
-        gsap.set(cards, { y: 60, opacity: 0 })
+        gsap.set(cards, { opacity: 0 })
         gsap.to(cards, {
-          y: 0,
           opacity: 1,
-          duration: 1.0,
-          stagger: 0.15,
+          duration: 0.8,
+          stagger: 0.12,
           ease: 'power2.out',
           scrollTrigger: {
             trigger: el,
