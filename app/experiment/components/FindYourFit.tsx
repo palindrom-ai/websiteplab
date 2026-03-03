@@ -3,8 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import ScrollDecode from './ScrollDecode'
 import ArrowIcon from './ArrowIcon'
-import BounceRings from './BounceRings'
-import ProcessRings from './ProcessRings'
+import StepIcons from './StepIcons'
 
 // Brand palette (synced with hero shader)
 const BRAND_COLORS: [number, number, number][] = [
@@ -427,12 +426,16 @@ export default function FindYourFit() {
             <span className="exp-terminal-title">progression-labs://finder</span>
           </div>
 
+          {/* Shared icon wrapper — both SVGs always in DOM for crossfade */}
+          {(step === 0 || step === 1) && (
+            <div style={{ marginBottom: 16 }}>
+              <StepIcons step={step} />
+            </div>
+          )}
+
           {/* Step 0: Role selection */}
           {step === 0 && (
             <div className="exp-finder-step exp-finder-step--visible">
-              <div style={{ marginBottom: 16 }}>
-                <BounceRings size={80} />
-              </div>
               <div className="exp-terminal-prompt">
                 <span className="exp-terminal-caret">&gt;</span>
                 <span className="exp-terminal-text">What&apos;s your role?</span>
@@ -462,9 +465,6 @@ export default function FindYourFit() {
           {/* Step 1: Journey selection */}
           {step === 1 && (
             <div className="exp-finder-step exp-finder-step--visible">
-              <div style={{ marginBottom: 16 }}>
-                <ProcessRings size={80} showLabel={false} />
-              </div>
               <div className="exp-terminal-prompt">
                 <span className="exp-terminal-caret">&gt;</span>
                 <span className="exp-terminal-text">Where are you on your AI journey?</span>
