@@ -59,6 +59,10 @@ export default function StepIcons({ step }: StepIconsProps) {
           <clipPath id="clip-right">
             <circle cx="125" cy="85" r="45" />
           </clipPath>
+          <linearGradient id="venn-grad" gradientUnits="userSpaceOnUse" x1="100" y1="40" x2="100" y2="173">
+            <stop offset="0%" className={styles.stopAccent} />
+            <stop offset="100%" stopColor="#ffffff" />
+          </linearGradient>
         </defs>
         {/* 3 outlined circles */}
         <circle cx="75" cy="85" r="45" className={`${styles.venn} ${styles.circleLeft}`} />

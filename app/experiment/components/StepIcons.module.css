@@ -98,12 +98,11 @@
 
 /* =========================================
    Venn Diagram (Result — Step 2)
-   2s loop with cubic-bezier(0.25, 1, 0.5, 1)
-   to match stack & rings momentum
+   3s loop, staggered draw-on, accent→white gradient
    ========================================= */
 .venn {
   fill: none;
-  stroke: var(--t-accent, rgb(186, 85, 211));
+  stroke: url(#venn-grad);
   stroke-width: 2.5px;
   stroke-dasharray: 283;
   stroke-dashoffset: 283;
@@ -113,33 +112,33 @@
 .circleLeft {
   transform-origin: 75px 85px;
   transform: rotate(-90deg);
-  animation: drawCircle 2s cubic-bezier(0.25, 1, 0.5, 1) infinite;
+  animation: drawCircle 3s cubic-bezier(0.25, 1, 0.5, 1) infinite;
 }
 .circleRight {
   transform-origin: 125px 85px;
   transform: rotate(-90deg);
-  animation: drawCircle 2s cubic-bezier(0.25, 1, 0.5, 1) 0.1s infinite;
+  animation: drawCircle 3s cubic-bezier(0.25, 1, 0.5, 1) 0.1s infinite;
 }
 .circleBottom {
   transform-origin: 100px 128px;
   transform: rotate(90deg);
-  animation: drawCircle 2s cubic-bezier(0.25, 1, 0.5, 1) 0.2s infinite;
+  animation: drawCircle 3s cubic-bezier(0.25, 1, 0.5, 1) 0.2s infinite;
 }
 
 .vennCenter {
-  fill: var(--t-accent, rgb(186, 85, 211));
+  fill: url(#venn-grad);
   opacity: 0;
-  animation: fillCenter 2s cubic-bezier(0.25, 1, 0.5, 1) 0.2s infinite;
+  animation: fillCenter 3s cubic-bezier(0.25, 1, 0.5, 1) 0.2s infinite;
 }
 
 @keyframes drawCircle {
-  0%, 10%   { stroke-dashoffset: 283; opacity: 1; }
-  40%, 75%  { stroke-dashoffset: 0;   opacity: 1; }
-  90%, 100% { stroke-dashoffset: 0;   opacity: 0; }
+  0%, 8%    { stroke-dashoffset: 283; opacity: 1; }
+  35%, 78%  { stroke-dashoffset: 0;   opacity: 1; }
+  92%, 100% { stroke-dashoffset: 0;   opacity: 0; }
 }
 
 @keyframes fillCenter {
-  0%, 40%   { opacity: 0; }
-  55%, 75%  { opacity: 1; }
-  90%, 100% { opacity: 0; }
+  0%, 35%   { opacity: 0; }
+  50%, 78%  { opacity: 1; }
+  92%, 100% { opacity: 0; }
 }
