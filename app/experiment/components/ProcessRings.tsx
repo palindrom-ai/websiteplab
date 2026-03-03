@@ -10,24 +10,16 @@ interface ProcessRingsProps {
 }
 
 export default function ProcessRings({ size, showLabel = true }: ProcessRingsProps) {
-  const scaleXValues = [1.2, 1.6, 2.0, 2.4]
-
   return (
     <div
       className={styles.container}
       style={size ? { '--pr-size': `${size}px` } as React.CSSProperties : undefined}
     >
       <div className={styles.ringWrapper}>
-        {scaleXValues.map((peak, i) => (
-          <div
-            key={i}
-            className={styles.ring}
-            style={{
-              animationName: `stretch-${i}`,
-              '--peak': `${peak}`,
-            } as React.CSSProperties}
-          />
-        ))}
+        <div className={`${styles.ring} ${styles.ring1}`} />
+        <div className={`${styles.ring} ${styles.ring2}`} />
+        <div className={`${styles.ring} ${styles.ring3}`} />
+        <div className={`${styles.ring} ${styles.ring4}`} />
       </div>
       {showLabel && <div className={styles.label}>Process</div>}
     </div>
