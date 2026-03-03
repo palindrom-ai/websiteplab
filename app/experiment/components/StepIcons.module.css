@@ -98,47 +98,69 @@
 
 /* =========================================
    Venn Diagram (Result — Step 2)
-   3s loop, staggered draw-on, accent→white gradient
+   3.5s loop, staggered draw-on baked into
+   separate keyframes, accent→white gradient
    ========================================= */
 .venn {
   fill: none;
   stroke: url(#venn-grad);
-  stroke-width: 2.5px;
-  stroke-dasharray: 283;
-  stroke-dashoffset: 283;
+  stroke-width: 3.5px;
+  /* circumference of r=38: 2 * π * 38 ≈ 239 */
+  stroke-dasharray: 239;
+  stroke-dashoffset: 239;
 }
 
-/* Each circle draws on with a staggered delay */
+/*
+  Stagger baked into keyframes (no animation-delay).
+  Left starts at 3%, Right at 7%, Bottom at 11%.
+  Each takes ~25% to draw. All done by ~36%.
+  Center fills 40–50%. Hold until 78%. Fade 80–92%.
+*/
 .circleLeft {
-  transform-origin: 75px 85px;
+  transform-origin: 80px 85px;
   transform: rotate(-90deg);
-  animation: drawCircle 3s cubic-bezier(0.25, 1, 0.5, 1) infinite;
+  animation: drawLeft 3.5s ease-in-out infinite;
 }
 .circleRight {
-  transform-origin: 125px 85px;
+  transform-origin: 120px 85px;
   transform: rotate(-90deg);
-  animation: drawCircle 3s cubic-bezier(0.25, 1, 0.5, 1) 0.1s infinite;
+  animation: drawRight 3.5s ease-in-out infinite;
 }
 .circleBottom {
-  transform-origin: 100px 128px;
+  transform-origin: 100px 122px;
   transform: rotate(90deg);
-  animation: drawCircle 3s cubic-bezier(0.25, 1, 0.5, 1) 0.2s infinite;
+  animation: drawBottom 3.5s ease-in-out infinite;
 }
 
 .vennCenter {
   fill: url(#venn-grad);
   opacity: 0;
-  animation: fillCenter 3s cubic-bezier(0.25, 1, 0.5, 1) 0.2s infinite;
+  animation: fillCenter 3.5s ease-in-out infinite;
 }
 
-@keyframes drawCircle {
-  0%, 8%    { stroke-dashoffset: 283; opacity: 1; }
-  35%, 78%  { stroke-dashoffset: 0;   opacity: 1; }
-  92%, 100% { stroke-dashoffset: 0;   opacity: 0; }
+@keyframes drawLeft {
+  0%, 3%    { stroke-dashoffset: 239; opacity: 0; }
+  5%        { opacity: 1; }
+  28%, 78%  { stroke-dashoffset: 0; opacity: 1; }
+  90%, 100% { stroke-dashoffset: 0; opacity: 0; }
+}
+
+@keyframes drawRight {
+  0%, 7%    { stroke-dashoffset: 239; opacity: 0; }
+  9%        { opacity: 1; }
+  32%, 78%  { stroke-dashoffset: 0; opacity: 1; }
+  90%, 100% { stroke-dashoffset: 0; opacity: 0; }
+}
+
+@keyframes drawBottom {
+  0%, 11%   { stroke-dashoffset: 239; opacity: 0; }
+  13%       { opacity: 1; }
+  36%, 78%  { stroke-dashoffset: 0; opacity: 1; }
+  90%, 100% { stroke-dashoffset: 0; opacity: 0; }
 }
 
 @keyframes fillCenter {
-  0%, 35%   { opacity: 0; }
-  50%, 78%  { opacity: 1; }
-  92%, 100% { opacity: 0; }
+  0%, 38%   { opacity: 0; }
+  48%, 78%  { opacity: 1; }
+  90%, 100% { opacity: 0; }
 }

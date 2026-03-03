@@ -54,24 +54,24 @@ export default function StepIcons({ step }: StepIconsProps) {
       >
         <defs>
           <clipPath id="clip-left">
-            <circle cx="75" cy="85" r="45" />
+            <circle cx="80" cy="85" r="38" />
           </clipPath>
           <clipPath id="clip-right">
-            <circle cx="125" cy="85" r="45" />
+            <circle cx="120" cy="85" r="38" />
           </clipPath>
-          <linearGradient id="venn-grad" gradientUnits="userSpaceOnUse" x1="100" y1="40" x2="100" y2="173">
+          <linearGradient id="venn-grad" gradientUnits="userSpaceOnUse" x1="100" y1="47" x2="100" y2="160">
             <stop offset="0%" className={styles.stopAccent} />
             <stop offset="100%" stopColor="#ffffff" />
           </linearGradient>
         </defs>
         {/* 3 outlined circles */}
-        <circle cx="75" cy="85" r="45" className={`${styles.venn} ${styles.circleLeft}`} />
-        <circle cx="125" cy="85" r="45" className={`${styles.venn} ${styles.circleRight}`} />
-        <circle cx="100" cy="128" r="45" className={`${styles.venn} ${styles.circleBottom}`} />
+        <circle cx="80" cy="85" r="38" className={`${styles.venn} ${styles.circleLeft}`} />
+        <circle cx="120" cy="85" r="38" className={`${styles.venn} ${styles.circleRight}`} />
+        <circle cx="100" cy="122" r="38" className={`${styles.venn} ${styles.circleBottom}`} />
         {/* Filled center — clipped to triple overlap */}
         <g clipPath="url(#clip-left)">
           <g clipPath="url(#clip-right)">
-            <circle cx="100" cy="128" r="45" className={styles.vennCenter} />
+            <circle cx="100" cy="122" r="38" className={styles.vennCenter} />
           </g>
         </g>
       </svg>
