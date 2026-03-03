@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import ScrollDecode from './ScrollDecode'
 import ArrowIcon from './ArrowIcon'
-import PulsingGrid from './PulsingGrid'
+import BounceRings from './BounceRings'
 import ProcessRings from './ProcessRings'
 
 // Brand palette (synced with hero shader)
@@ -431,7 +431,7 @@ export default function FindYourFit() {
           {step === 0 && (
             <div className="exp-finder-step exp-finder-step--visible">
               <div style={{ marginBottom: 16 }}>
-                <PulsingGrid size={48} />
+                <BounceRings size={80} />
               </div>
               <div className="exp-terminal-prompt">
                 <span className="exp-terminal-caret">&gt;</span>
