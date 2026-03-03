@@ -260,18 +260,18 @@ html:has(.experiment) { scroll-behavior: auto; }
    ============================================ */
 
 .exp-hero {
-  min-height: 85dvh;
+  min-height: 100dvh;
   position: relative;
   overflow: hidden;
   background: var(--exp-bg);
-  padding: 72px 80px 48px 80px; /* top = nav height (56px) + 16px gap */
+  padding: 72px 80px 80px 80px; /* top = nav height (56px) + 16px gap */
 }
 
 /* Inner framed box — sharp 90-degree corners, 1px border */
 .exp-hero-frame {
   position: relative;
   width: 100%;
-  min-height: calc(85dvh - 120px); /* 72px top + 48px bottom padding */
+  min-height: calc(100dvh - 152px); /* 72px top + 80px bottom padding */
   border: 1px dashed rgba(255, 255, 255, 0.12);
   border-radius: 0;
   overflow: hidden;
