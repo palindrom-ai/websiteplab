@@ -853,11 +853,12 @@ html:has(.experiment) { scroll-behavior: auto; }
 
 /* --- Logo section (Isidor Splide-style infinite CSS marquee) --- */
 .exp-logo-carousel {
-  padding: 48px 0;
-  max-width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 40px 0;
   overflow: hidden;
-  margin-left: 80px;
-  margin-right: 80px;
 }
 
 .exp-logo-carousel-label {

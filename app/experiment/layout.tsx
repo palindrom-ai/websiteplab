@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './experiment.css'
 import SmoothScroll from './components/SmoothScroll'
+import ThemeProvider from './components/ThemeProvider'
 
 export const metadata: Metadata = {
   title: 'Progression Labs — AI That Ships',
@@ -13,6 +14,7 @@ export default function ExperimentLayout({
   children: React.ReactNode
 }) {
   return (
+    <ThemeProvider>
     <div className="experiment">
       <SmoothScroll>
       {children}
@@ -32,5 +34,6 @@ export default function ExperimentLayout({
         </svg>
       </div>
     </div>
+    </ThemeProvider>
   )
 }
