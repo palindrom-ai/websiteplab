@@ -111,56 +111,60 @@
 }
 
 /*
-  Stagger baked into keyframes (no animation-delay).
-  Left starts at 3%, Right at 7%, Bottom at 11%.
-  Each takes ~25% to draw. All done by ~36%.
-  Center fills 40–50%. Hold until 78%. Fade 80–92%.
+  Sequence: draw circles → pause → fill center → hold → fade → restart
+
+  0–30%   Circles draw on (staggered: 3%, 7%, 11%)
+  30–42%  Circles hold, center still empty (the pause)
+  42–52%  Center fills in
+  52–75%  Everything holds together
+  80–92%  Everything fades out
+  92–100% Rest before restart
 */
 .circleLeft {
   transform-origin: 80px 85px;
   transform: rotate(-90deg);
-  animation: drawLeft 3.5s ease-in-out infinite;
+  animation: drawLeft 4s ease-in-out infinite;
 }
 .circleRight {
   transform-origin: 120px 85px;
   transform: rotate(-90deg);
-  animation: drawRight 3.5s ease-in-out infinite;
+  animation: drawRight 4s ease-in-out infinite;
 }
 .circleBottom {
   transform-origin: 100px 122px;
   transform: rotate(90deg);
-  animation: drawBottom 3.5s ease-in-out infinite;
+  animation: drawBottom 4s ease-in-out infinite;
 }
 
 .vennCenter {
   fill: url(#venn-grad);
   opacity: 0;
-  animation: fillCenter 3.5s ease-in-out infinite;
+  animation: fillCenter 4s ease-in-out infinite;
 }
 
 @keyframes drawLeft {
-  0%, 3%    { stroke-dashoffset: 239; opacity: 0; }
-  5%        { opacity: 1; }
-  28%, 78%  { stroke-dashoffset: 0; opacity: 1; }
-  90%, 100% { stroke-dashoffset: 0; opacity: 0; }
+  0%, 2%    { stroke-dashoffset: 239; opacity: 0; }
+  4%        { opacity: 1; }
+  25%, 75%  { stroke-dashoffset: 0; opacity: 1; }
+  88%, 100% { stroke-dashoffset: 0; opacity: 0; }
 }
 
 @keyframes drawRight {
-  0%, 7%    { stroke-dashoffset: 239; opacity: 0; }
-  9%        { opacity: 1; }
-  32%, 78%  { stroke-dashoffset: 0; opacity: 1; }
-  90%, 100% { stroke-dashoffset: 0; opacity: 0; }
+  0%, 6%    { stroke-dashoffset: 239; opacity: 0; }
+  8%        { opacity: 1; }
+  29%, 75%  { stroke-dashoffset: 0; opacity: 1; }
+  88%, 100% { stroke-dashoffset: 0; opacity: 0; }
 }
 
 @keyframes drawBottom {
-  0%, 11%   { stroke-dashoffset: 239; opacity: 0; }
-  13%       { opacity: 1; }
-  36%, 78%  { stroke-dashoffset: 0; opacity: 1; }
-  90%, 100% { stroke-dashoffset: 0; opacity: 0; }
+  0%, 10%   { stroke-dashoffset: 239; opacity: 0; }
+  12%       { opacity: 1; }
+  33%, 75%  { stroke-dashoffset: 0; opacity: 1; }
+  88%, 100% { stroke-dashoffset: 0; opacity: 0; }
 }
 
 @keyframes fillCenter {
-  0%, 38%   { opacity: 0; }
-  48%, 78%  { opacity: 1; }
-  90%, 100% { opacity: 0; }
+  0%, 42%   { opacity: 0; }
+  52%, 75%  { opacity: 1; }
+  88%, 100% { opacity: 0; }
 }
