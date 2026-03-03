@@ -3,7 +3,7 @@
 import styles from './ProcessRings.module.css'
 
 interface ProcessRingsProps {
-  /** Total width/height of the ring area in px (default 60) */
+  /** Height of the ring area in px (default 60) */
   size?: number
   /** Whether to show the "Process" label (default true) */
   showLabel?: boolean

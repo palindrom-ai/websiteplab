@@ -8,17 +8,19 @@
 
 .ringWrapper {
   position: relative;
-  width: var(--pr-size);
   height: var(--pr-size);
+  width: var(--pr-size);
 }
 
+/* Anchor to center, animate width for uniform border thickness */
 .ring {
   position: absolute;
   top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  border: 3px solid #ffffff;
+  left: 50%;
+  transform: translateX(-50%);
+  height: var(--pr-size);
+  width: var(--pr-size);
+  border: 2px solid #ffffff;
   border-radius: 50%;
   box-sizing: border-box;
   animation-duration: 2s;
@@ -26,29 +28,30 @@
   animation-timing-function: ease-in-out;
 }
 
-.ring1 { animation-name: stretch1; }
-.ring2 { animation-name: stretch2; }
-.ring3 { animation-name: stretch3; }
-.ring4 { animation-name: stretch4; }
+.ring1 { animation-name: stretchW1; }
+.ring2 { animation-name: stretchW2; }
+.ring3 { animation-name: stretchW3; }
+.ring4 { animation-name: stretchW4; }
 
-@keyframes stretch1 {
-  0%, 100% { transform: scaleX(1); }
-  50%      { transform: scaleX(1.2); }
+/* Width-based keyframes: border stays a perfect 2px at all times */
+@keyframes stretchW1 {
+  0%, 100% { width: var(--pr-size); }
+  50%      { width: calc(var(--pr-size) * 1.2); }
 }
 
-@keyframes stretch2 {
-  0%, 100% { transform: scaleX(1); }
-  50%      { transform: scaleX(1.6); }
+@keyframes stretchW2 {
+  0%, 100% { width: var(--pr-size); }
+  50%      { width: calc(var(--pr-size) * 1.6); }
 }
 
-@keyframes stretch3 {
-  0%, 100% { transform: scaleX(1); }
-  50%      { transform: scaleX(2.0); }
+@keyframes stretchW3 {
+  0%, 100% { width: var(--pr-size); }
+  50%      { width: calc(var(--pr-size) * 2.0); }
 }
 
-@keyframes stretch4 {
-  0%, 100% { transform: scaleX(1); }
-  50%      { transform: scaleX(2.4); }
+@keyframes stretchW4 {
+  0%, 100% { width: var(--pr-size); }
+  50%      { width: calc(var(--pr-size) * 2.4); }
 }
 
 .label {
