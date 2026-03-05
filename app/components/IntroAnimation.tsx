@@ -435,16 +435,58 @@ export default function IntroAnimation({ onComplete }: IntroAnimationProps) {
     // Dither effect configuration - half the size of P shape squares
     const ditherBlockSize = pixelSize / 2
 
-    // Blue to turquoise color palette (matching AsciiVideoCanvas)
-    const OCEAN_COLORS = [
-      { r: 0, g: 119, b: 190 },   // Ocean blue
-      { r: 0, g: 150, b: 199 },   // Medium blue
-      { r: 0, g: 180, b: 216 },   // Bright blue
-      { r: 72, g: 202, b: 228 },  // Cyan
-      { r: 144, g: 224, b: 239 }, // Light cyan
-      { r: 173, g: 232, b: 244 }, // Pale turquoise
-      { r: 202, g: 240, b: 248 }, // Very light turquoise
+    // Brand palette matching HeroGradientGL — 5 colors over 30s cycle
+    const BRAND_COLORS = [
+      { r: 186, g: 85, b: 211 },  // Orchid    #BA55D3
+      { r: 255, g: 160, b: 122 }, // Salmon    #FFA07A
+      { r: 185, g: 233, b: 121 }, // Green     #B9E979
+      { r: 64, g: 224, b: 208 },  // Turquoise #40E0D0
+      { r: 0, g: 0, b: 255 },     // Blue      #0000FF
     ]
+
+    // Gradient ramp matching HeroGradientGL's computeGradient()
+    const computeGradient = (gp: number, peak: { r: number; g: number; b: number }) => {
+      const mixC = (a: { r: number; g: number; b: number }, b: { r: number; g: number; b: number }, t: number) => ({
+        r: Math.round(a.r + (b.r - a.r) * t),
+        g: Math.round(a.g + (b.g - a.g) * t),
+        b: Math.round(a.b + (b.b - a.b) * t),
+      })
+      const black = { r: 1, g: 1, b: 1 }
+      const deep = { r: peak.r * 0.06, g: peak.g * 0.06, b: peak.b * 0.06 }
+      const mid = { r: peak.r * 0.35, g: peak.g * 0.35, b: peak.b * 0.35 }
+      const hot = peak
+      const wash = { r: peak.r + (255 - peak.r) * 0.5, g: peak.g + (255 - peak.g) * 0.5, b: peak.b + (255 - peak.b) * 0.5 }
+      if (gp < 0.04) return mixC(black, deep, gp / 0.04)
+      if (gp < 0.18) return mixC(deep, mid, (gp - 0.04) / 0.14)
+      if (gp < 0.45) return mixC(mid, hot, (gp - 0.18) / 0.27)
+      if (gp < 0.72) return mixC(hot, wash, (gp - 0.45) / 0.27)
+      return mixC(wash, { r: 255, g: 255, b: 255 }, (gp - 0.72) / 0.28)
+    }
+
+    // Get brand peak color for the current moment (synced with hero shader)
+    const getBrandPeakColor = () => {
+      const cycleSec = 30
+      const elapsed = (Date.now() - startTime) / 1000
+      const progress = (elapsed % cycleSec) / cycleSec
+      const segProgress = progress * 5
+      const segIndex = Math.floor(segProgress) % 5
+      const t = segProgress - Math.floor(segProgress)
+      const ss = t * t * (3 - 2 * t)
+      const from = BRAND_COLORS[segIndex]
+      const to = BRAND_COLORS[(segIndex + 1) % 5]
+      return {
+        r: from.r + (to.r - from.r) * ss,
+        g: from.g + (to.g - from.g) * ss,
+        b: from.b + (to.b - from.b) * ss,
+      }
+    }
+
+    // Per-column y-offsets to break horizontal banding (matches hero shader)
+    const colOffsets: number[] = []
+    for (let ci = 0; ci < 200; ci++) {
+      const h = Math.sin(ci * 127.1) * 43758.5453
+      colOffsets.push((h - Math.floor(h)) * 0.035)
+    }
 
     const ditherColors = {
       blockColorStart: '#ffffff',
@@ -456,7 +498,7 @@ export default function IntroAnimation({ onComplete }: IntroAnimationProps) {
     const circleProbability = 0.36
     const asciiProbability = 0.8
 
-    // Get ocean color based on brightness (for flower ASCII)
+    // Get brand color based on brightness (for flower ASCII)
     const getOceanColor = (brightness: number): { r: number; g: number; b: number } => {
       const threshold = 0.35
       if (brightness < threshold) return { r: 0, g: 0, b: 0 } // Will be skipped
@@ -464,11 +506,11 @@ export default function IntroAnimation({ onComplete }: IntroAnimationProps) {
       const normalizedBrightness = (brightness - threshold) / (1 - threshold)
       const t = Math.max(0, Math.min(1, normalizedBrightness))
 
-      const index = Math.min(Math.floor(t * (OCEAN_COLORS.length - 1)), OCEAN_COLORS.length - 2)
+      const index = Math.min(Math.floor(t * (BRAND_COLORS.length - 1)), BRAND_COLORS.length - 2)
       const nextIndex = index + 1
-      const localT = (t * (OCEAN_COLORS.length - 1)) - index
-      const c1 = OCEAN_COLORS[index]
-      const c2 = OCEAN_COLORS[nextIndex]
+      const localT = (t * (BRAND_COLORS.length - 1)) - index
+      const c1 = BRAND_COLORS[index]
+      const c2 = BRAND_COLORS[nextIndex]
 
       return {
         r: Math.round(c1.r + (c2.r - c1.r) * localT),
@@ -544,89 +586,44 @@ export default function IntroAnimation({ onComplete }: IntroAnimationProps) {
       return false
     }
 
-    // Draw dither effect over the logo
+    // Draw dither effect over the logo — brand gradient pixel blocks matching HeroGradientGL
     const drawDitherEffect = (progress: number) => {
       if (progress <= 0) return
 
-      // Calculate logo bounds for dither effect
+      const peakColor = getBrandPeakColor()
       const logoLeft = startX - ditherBlockSize * 2
       const logoTop = startY - ditherBlockSize * 2
       const logoRight = startX + gridWidth + ditherBlockSize * 2
       const logoBottom = startY + gridHeight + ditherBlockSize * 2
 
-      // Draw dithered blocks based on logo geometry
-      for (let y = logoTop; y < logoBottom; y += ditherBlockSize) {
-        for (let x = logoLeft; x < logoRight; x += ditherBlockSize) {
-          // Check center of block against logo shape
+      let colIndex = 0
+      for (let x = logoLeft; x < logoRight; x += ditherBlockSize) {
+        const colYOffset = colOffsets[colIndex % colOffsets.length]
+        colIndex++
+
+        for (let y = logoTop; y < logoBottom; y += ditherBlockSize) {
           const centerX = x + ditherBlockSize / 2
           const centerY = y + ditherBlockSize / 2
 
-          // Only apply effect to logo areas
-          if (isPartOfLogo(centerX, centerY)) {
-            // Random appearance delay for each block (cap at 0.8 to avoid division issues)
-            const appearDelay = getBlockRandom(x, y, 5) * 0.8
-            const blockProgress = Math.max(0, Math.min(1, (progress - appearDelay) / (1 - appearDelay)))
+          if (!isPartOfLogo(centerX, centerY)) continue
 
-            if (blockProgress > 0) {
-              // Calculate position-based gradient with randomness
-              const normalizedX = (x - logoLeft) / (logoRight - logoLeft)
-              const normalizedY = (y - logoTop) / (logoBottom - logoTop)
-              // Base diagonal gradient: combine x (left-to-right) and inverted y (bottom-to-top)
-              const baseT = (normalizedX + (1 - normalizedY)) / 2
-              // Add randomness to the gradient position (±0.3 variation)
-              const randomOffset = (getBlockRandom(x, y, 4) - 0.5) * 0.6
-              const t = Math.max(0, Math.min(1, baseT + randomOffset))
+          // Staggered appearance
+          const appearDelay = getBlockRandom(x, y, 5) * 0.8
+          const blockProgress = Math.max(0, Math.min(1, (progress - appearDelay) / (1 - appearDelay)))
+          if (blockProgress <= 0) continue
 
-              // Use ocean colors (same as flower ASCII)
-              const colorIndex = Math.min(Math.floor(t * (OCEAN_COLORS.length - 1)), OCEAN_COLORS.length - 2)
-              const nextIndex = colorIndex + 1
-              const localT = (t * (OCEAN_COLORS.length - 1)) - colorIndex
-              const c1 = OCEAN_COLORS[colorIndex]
-              const c2 = OCEAN_COLORS[nextIndex]
-              const color = {
-                r: Math.round(c1.r + (c2.r - c1.r) * localT),
-                g: Math.round(c1.g + (c2.g - c1.g) * localT),
-                b: Math.round(c1.b + (c2.b - c1.b) * localT),
-              }
+          // Vertical gradient position (0=bottom, 1=top) + per-column offset
+          const normalizedY = 1 - (y - logoTop) / (logoBottom - logoTop)
+          const gp = Math.max(0, Math.min(1, normalizedY + colYOffset))
 
-              // Draw block background
-              ctx.fillStyle = `rgb(${color.r}, ${color.g}, ${color.b})`
-              ctx.globalAlpha = Math.min(1, blockProgress * 2)
-              ctx.fillRect(x, y, ditherBlockSize, ditherBlockSize)
+          // Compute gradient color using same ramp as HeroGradientGL
+          const color = computeGradient(gp, peakColor)
 
-              // Get random values for this block
-              const rand1 = getBlockRandom(x, y, 1)
-              const rand2 = getBlockRandom(x, y, 2)
-              const rand3 = getBlockRandom(x, y, 3)
-
-              // Symbol color - lighter version (same as flower)
-              const symbolColor = {
-                r: Math.min(255, color.r + 80),
-                g: Math.min(255, color.g + 80),
-                b: Math.min(255, color.b + 80),
-              }
-
-              if (rand1 < 0.35) {
-                ctx.fillStyle = `rgb(${symbolColor.r}, ${symbolColor.g}, ${symbolColor.b})`
-                ctx.textAlign = 'center'
-                ctx.textBaseline = 'middle'
-
-                if (rand2 < 0.5) {
-                  // Random ASCII character
-                  const charIndex = Math.floor(rand3 * ASCII_CHARS.length)
-                  ctx.font = `bold ${ditherBlockSize * 0.7}px monospace`
-                  ctx.fillText(ASCII_CHARS[charIndex], x + ditherBlockSize / 2, y + ditherBlockSize / 2)
-                } else {
-                  // Full circle (diameter = block size)
-                  ctx.beginPath()
-                  ctx.arc(x + ditherBlockSize / 2, y + ditherBlockSize / 2, (ditherBlockSize - 2) / 2, 0, Math.PI * 2)
-                  ctx.fill()
-                }
-              }
-
-              ctx.globalAlpha = 1
-            }
-          }
+          // Clean pixel block — no ASCII or circle decorations
+          ctx.fillStyle = `rgb(${color.r}, ${color.g}, ${color.b})`
+          ctx.globalAlpha = Math.min(1, blockProgress * 2)
+          ctx.fillRect(x, y, ditherBlockSize, ditherBlockSize)
+          ctx.globalAlpha = 1
         }
       }
     }
