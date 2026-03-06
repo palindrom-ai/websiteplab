@@ -821,52 +821,85 @@ html:has(.experiment) { scroll-behavior: auto; }
 .exp-col-label--gradient {
   /* Note: position:sticky comes from .exp-col-label — do NOT set position:relative here
      as it would override sticky. sticky already creates a containing block for ::after. */
-  /* Fallback gradient before JS hydrates — JS will override via inline style */
-  background-image: linear-gradient(
-    to bottom,
-    rgba(0, 0, 255, 0.8) 0%,
-    rgba(0, 0, 255, 0.5) 30%,
-    rgba(0, 0, 255, 0.18) 65%,
-    transparent 100%
-  );
+  /* Background cleared — Unicorn Studio WebGL canvas handles visuals */
+  background: transparent;
   padding: 48px 40px;
   border: none;
   min-height: 400px;
   display: flex;
   flex-direction: column;
   justify-content: center;
+  overflow: hidden;
 }
 
 /* Push content toward top of gradient box */
 .exp-col-label--top {
   justify-content: flex-start;
   padding-top: 48px;
-  /* Bottom edge fades into dark background — top/left/right stay sharp */
-  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 65%, transparent 100%);
-  mask-image: linear-gradient(to bottom, black 0%, black 65%, transparent 100%);
 }
 
-/* Grain/noise overlay matching hero */
-.exp-col-label--gradient::after {
+/* Unicorn Studio WebGL canvas — fills the gradient label as background */
+.exp-unicorn-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+/* Text content sits above the WebGL canvas with dark scrim for readability */
+.exp-col-label-content {
+  position: relative;
+  z-index: 2;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.35) 0%,
+    rgba(0, 0, 0, 0.15) 70%,
+    transparent 100%
+  );
+  padding: 24px 20px;
+  margin: -24px -20px;
+  border-radius: 0;
+}
+
+/* Fine grid lines — barely visible, vanishes in dark areas */
+.exp-col-label--gradient::before {
   content: '';
   position: absolute;
   inset: 0;
-  opacity: 0.15;
-  mix-blend-mode: overlay;
-  pointer-events: none;
   z-index: 1;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E") repeat;
+  pointer-events: none;
+  mix-blend-mode: overlay;
+  opacity: 0.4;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.08) 0px,
+      rgba(255, 255, 255, 0.08) 1px,
+      transparent 1px,
+      transparent 14px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.08) 0px,
+      rgba(255, 255, 255, 0.08) 1px,
+      transparent 1px,
+      transparent 14px
+    );
 }
+
+/* Grain is baked into the WebGL shader — no CSS grain needed */
 
 .exp-col-label--gradient .exp-section-heading {
   font-weight: 300;
   font-size: var(--exp-h1);
   line-height: 1.35;
   margin-bottom: 16px;
+  color: #fff;
 }
 
 .exp-col-label--gradient .exp-label-desc {
-  color: var(--exp-text-secondary);
+  color: #fff;
   font-size: 15px;
   line-height: 1.6;
   margin-bottom: 24px;

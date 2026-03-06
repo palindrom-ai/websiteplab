@@ -5,6 +5,7 @@ import ScrollDecode from './ScrollDecode'
 import ArrowIcon from './ArrowIcon'
 import StepIcons from './StepIcons'
 import { useColorCycle } from './useColorCycle'
+import PixelGradientCanvas from './PixelGradientCanvas'
 
 const TYPING_SPEED = 35 // ms per character
 
@@ -208,8 +209,8 @@ export default function FindYourFit() {
   const gsapRef = useRef<typeof import('gsap')['default'] | null>(null)
   const typingRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  // Shared color cycle — gradient on label, accent vars on terminal
-  const labelRef = useColorCycle([terminalRef])
+  // Shared color cycle — skip gradient override (WebGL canvas handles visuals), keep terminal accents
+  const labelRef = useColorCycle([terminalRef], { skipGradient: true })
 
   useEffect(() => {
     import('gsap').then(mod => { gsapRef.current = mod.default })
@@ -346,21 +347,26 @@ export default function FindYourFit() {
 
   return (
     <div className="exp-12-grid exp-12-grid--half exp-finder">
-      {/* Left column — label + gradient */}
+      {/* Left column — Unicorn Studio WebGL canvas + text overlay */}
       <div ref={labelRef} className="exp-col-label exp-col-label--gradient exp-col-label--top">
-        <ScrollDecode
-          text="Find Your Fit"
-          trigger="inView"
-          tag="h2"
-          className="exp-section-heading"
-          duration={800}
-        />
-        <p className="exp-label-desc">
-          Two questions. One recommendation.
-        </p>
-        <div className="exp-finder-progress" aria-hidden="true">
-          <div className={`exp-finder-dot${step >= 0 ? ' exp-finder-dot--active' : ''}`} />
-          <div className={`exp-finder-dot${step >= 1 ? ' exp-finder-dot--active' : ''}`} />
+        {/* WebGL pixel gradient canvas — sits behind text */}
+        <PixelGradientCanvas />
+        {/* Text content — sits on top */}
+        <div className="exp-col-label-content">
+          <ScrollDecode
+            text="Find Your Fit"
+            trigger="inView"
+            tag="h2"
+            className="exp-section-heading"
+            duration={800}
+          />
+          <p className="exp-label-desc">
+            Two questions. One recommendation.
+          </p>
+          <div className="exp-finder-progress" aria-hidden="true">
+            <div className={`exp-finder-dot${step >= 0 ? ' exp-finder-dot--active' : ''}`} />
+            <div className={`exp-finder-dot${step >= 1 ? ' exp-finder-dot--active' : ''}`} />
+          </div>
         </div>
       </div>
 

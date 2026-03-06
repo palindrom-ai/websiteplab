@@ -62,12 +62,13 @@ function subscribe(cb: ColorCallback) {
  * Optionally pass extra refs that need custom properties (e.g., terminal accent).
  */
 export function useColorCycle(
-  extraRefs?: React.RefObject<HTMLElement | null>[]
+  extraRefs?: React.RefObject<HTMLElement | null>[],
+  options?: { skipGradient?: boolean }
 ) {
   const elRef = useRef<HTMLDivElement>(null)
 
   const applyColor = useCallback((r: number, g: number, b: number) => {
-    if (elRef.current) {
+    if (elRef.current && !options?.skipGradient) {
       elRef.current.style.backgroundImage = `linear-gradient(
         to bottom,
         rgba(${r}, ${g}, ${b}, 0.8) 0%,
@@ -85,7 +86,7 @@ export function useColorCycle(
         }
       }
     }
-  }, [extraRefs])
+  }, [extraRefs, options?.skipGradient])
 
   useEffect(() => {
     return subscribe(applyColor)
