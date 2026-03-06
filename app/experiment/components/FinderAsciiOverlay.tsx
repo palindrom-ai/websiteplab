@@ -3,11 +3,6 @@
 import { useEffect, useRef } from 'react'
 import { SHARED_START } from './sharedTime'
 
-function smoothstep(edge0: number, edge1: number, x: number): number {
-  const t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)))
-  return t * t * (3 - 2 * t)
-}
-
 const CHARS = '0123456789@#$%&*+=?<>{}[]/\\|LABS'
 const SHADER_BLOCK_PX = 45 // Must match blockPx in PixelGradientCanvas shader
 const FILL_CHANCE = 0.4
@@ -22,25 +17,35 @@ export default function FinderAsciiOverlay() {
     if (!ctx) return
 
     const dpr = window.devicePixelRatio || 1
-    // The WebGL shader uses 45px in PHYSICAL pixel space.
-    // In CSS space, each block is 45 / dpr pixels.
     const cssBlockSize = SHADER_BLOCK_PX / dpr
+
+    // Find the sibling WebGL canvas to sample actual rendered pixels
+    const glCanvas = canvas.parentElement?.querySelector('canvas:not(.exp-ascii-overlay)') as HTMLCanvasElement | null
+
+    // Offscreen canvas for sampling the GL output at grid resolution
+    const sampleCanvas = document.createElement('canvas')
+    const sampleCtx = sampleCanvas.getContext('2d', { willReadFrequently: true })
 
     let cssWidth = canvas.offsetWidth
     let cssHeight = canvas.offsetHeight
+    let cols = 0
+    let rows = 0
     let grid: { cellX: number; cellY: number; char: string; brightness: number }[] = []
 
     const initGrid = () => {
       cssWidth = canvas.offsetWidth
       cssHeight = canvas.offsetHeight
-      // Set canvas resolution to match CSS size (1:1, not scaled by dpr)
       canvas.width = cssWidth
       canvas.height = cssHeight
 
-      grid = []
-      const cols = Math.ceil(cssWidth / cssBlockSize)
-      const rows = Math.ceil(cssHeight / cssBlockSize)
+      cols = Math.ceil(cssWidth / cssBlockSize)
+      rows = Math.ceil(cssHeight / cssBlockSize)
 
+      // Sample canvas matches grid dimensions (one pixel per cell)
+      sampleCanvas.width = cols
+      sampleCanvas.height = rows
+
+      grid = []
       for (let cellY = 0; cellY < rows; cellY++) {
         for (let cellX = 0; cellX < cols; cellX++) {
           if (Math.random() < FILL_CHANCE) {
@@ -58,14 +63,21 @@ export default function FinderAsciiOverlay() {
     initGrid()
 
     let rafId: number
-
-    // Font size scaled to fit neatly inside each block
     const fontSize = Math.round(cssBlockSize * 0.55)
 
     const render = () => {
       const time = performance.now() / 1000 - SHARED_START
 
       ctx.clearRect(0, 0, cssWidth, cssHeight)
+
+      // Sample the actual WebGL canvas — downscale to grid resolution
+      let pixelData: Uint8ClampedArray | null = null
+      if (glCanvas && sampleCtx && cols > 0 && rows > 0) {
+        sampleCtx.clearRect(0, 0, cols, rows)
+        sampleCtx.drawImage(glCanvas, 0, 0, cols, rows)
+        pixelData = sampleCtx.getImageData(0, 0, cols, rows).data
+      }
+
       ctx.font = `500 ${fontSize}px "Inter", sans-serif`
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
@@ -88,25 +100,25 @@ export default function FinderAsciiOverlay() {
         shimmerDist = Math.min(shimmerDist, 1.0 - shimmerDist)
         const shimmerMask = Math.exp(-shimmerDist * shimmerDist * 120.0) * 0.6
 
-        // Animated wavy fade — synced with shader's u_time wave math
-        const wave = Math.sin(vUvX * 3.5 + 1.2 + time * 0.6) * 0.12
-                   + Math.sin(vUvX * 8.0 + 3.7 - time * 0.45) * 0.07
-                   + Math.cos(vUvX * 5.5 + 0.5 + time * 0.35) * 0.08
-                   + Math.sin(vUvX * 12.0 + time * 0.8) * 0.03
+        // Sample actual rendered brightness from the GL canvas
+        // The sample canvas is drawn top-down, so cellY=0 = top of canvas
+        // But our cellY=0 maps to WebGL bottom. We need to flip:
+        // Canvas row for cellY in WebGL-bottom-up → sample row = (rows - 1 - cellY)
+        let glBrightness = 0
+        if (pixelData) {
+          const sampleRow = rows - 1 - cell.cellY
+          const idx = (sampleRow * cols + cell.cellX) * 4
+          const r = pixelData[idx]
+          const g = pixelData[idx + 1]
+          const b = pixelData[idx + 2]
+          const a = pixelData[idx + 3]
+          // Effective brightness: color over black background, premultiplied by alpha
+          glBrightness = (Math.max(r, g, b) / 255) * (a / 255)
+        }
 
-        // Left side extends further down — matching shader
-        const leftPush = Math.max(0, 1.0 - smoothstep(0.0, 0.6, vUvX)) * 0.45
-        const rightPush = Math.max(0, 1.0 - smoothstep(0.6, 1.0, vUvX)) * 0.10
-        const edgePush = leftPush + rightPush
-
-        const gradientAlpha = smoothstep(-0.35, 0.65, vUvY + wave + edgePush)
-
-        // Only show where gradient is visibly colored (follows the wavy shape)
-        // Remap so ASCII fades in sharply at the wave edge, not in dark zones
-        const visibleAmount = smoothstep(0.25, 0.55, gradientAlpha)
-
-        if (shimmerMask > 0.01 && visibleAmount > 0.01) {
-          const finalAlpha = shimmerMask * cell.brightness * visibleAmount
+        // Only show ASCII where the gradient is actually visible
+        if (shimmerMask > 0.01 && glBrightness > 0.12) {
+          const finalAlpha = shimmerMask * cell.brightness * Math.min(glBrightness * 2.0, 1.0)
           ctx.fillStyle = `rgba(255, 255, 255, ${finalAlpha})`
           ctx.fillText(cell.char, px, py)
         }
