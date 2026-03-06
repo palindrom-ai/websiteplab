@@ -115,22 +115,28 @@ const fragmentShaderSource = `
     vec3 pixelColor = computeGradient(pixelUv, u_time, peakA, peakB);
     pixelColor += (hash(cellId) - 0.5) * 0.035;
 
-    // === EDGE MASK — narrow pixel fringe at edges only ===
-    float edgeL = smoothstep(0.0, 0.10, uv.x);
-    float edgeR = smoothstep(1.0, 0.90, uv.x);
-    float edgeT = smoothstep(1.0, 0.92, uv.y);
-    float edgeB = smoothstep(0.0, 0.15, uv.y);
+    // === EDGE MASK — wide pixel border, smooth only in deep center ===
+    float edgeL = smoothstep(0.0, 0.25, uv.x);
+    float edgeR = smoothstep(1.0, 0.75, uv.x);
+    float edgeT = smoothstep(1.0, 0.75, uv.y);
+    float edgeB = smoothstep(0.0, 0.30, uv.y);
     float interior = edgeL * edgeR * edgeT * edgeB;
 
-    // === DIAGONAL SHIMMER — same as hero (lines 150-157 of HeroGradientGL) ===
+    // === BRIGHTNESS-DRIVEN PIXELATION — disperses color blobs at edges ===
+    // Use max channel instead of perceptual luminance so blue is treated equally
+    float intensity = max(smoothColor.r, max(smoothColor.g, smoothColor.b));
+    float edgeProximity = 1.0 - interior; // 0 in center, 1 at edges
+    float brightPixel = smoothstep(0.15, 0.5, intensity) * edgeProximity * 0.8;
+
+    // === DIAGONAL SHIMMER ===
     float diag = (uv.x + 1.0 - uv.y) * 0.5;
     float shimmerPos = fract(u_time * 0.25);
     float shimmerDist = abs(diag - shimmerPos);
     shimmerDist = min(shimmerDist, 1.0 - shimmerDist);
     float shimmerMask = exp(-shimmerDist * shimmerDist * 120.0) * 0.6;
 
-    // Combine: default smooth, edges + shimmer show pixel blocks
-    float pixelAmount = max(1.0 - interior, shimmerMask);
+    // Combine: edges + bright areas + shimmer all push toward pixel blocks
+    float pixelAmount = max(max(1.0 - interior, brightPixel), shimmerMask);
 
     // The pixel color IS the "ASCII" — flat blocky colors vs smooth gradient
     vec3 color = mix(smoothColor, pixelColor, pixelAmount);
@@ -142,13 +148,14 @@ const fragmentShaderSource = `
     // === Alpha — solid at top, wavy fade toward bottom ===
     float y = pixelUv.y;
 
-    // Wavy edge — visible movement but tighter amplitude
-    float wave = sin(pixelUv.x * 3.5 + 1.2 + u_time * 0.25) * 0.06
-               + sin(pixelUv.x * 7.0 + 3.7 - u_time * 0.18) * 0.03
-               + cos(pixelUv.x * 5.0 + 0.5 + u_time * 0.20) * 0.04;
+    // Wavy edge — deeper dips, organic living movement
+    float wave = sin(pixelUv.x * 3.5 + 1.2 + u_time * 0.6) * 0.12
+               + sin(pixelUv.x * 8.0 + 3.7 - u_time * 0.45) * 0.07
+               + cos(pixelUv.x * 5.5 + 0.5 + u_time * 0.35) * 0.08
+               + sin(pixelUv.x * 12.0 + u_time * 0.8) * 0.03;
 
-    // Left side extends much further down, right side a bit
-    float leftPush = (1.0 - smoothstep(0.0, 0.5, pixelUv.x)) * 0.25;
+    // Left side extends much further down
+    float leftPush = (1.0 - smoothstep(0.0, 0.6, pixelUv.x)) * 0.45;
     float rightPush = (1.0 - smoothstep(0.6, 1.0, pixelUv.x)) * 0.10;
     float edgePush = leftPush + rightPush;
 
