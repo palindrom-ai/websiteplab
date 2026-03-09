@@ -3,11 +3,12 @@ import { adjustBrightness, rgbString, rgbToHsl, hslToRgb } from './colorMapping'
 // Multiple character sets per density tier — picks pseudo-randomly per cell for variety.
 // 5 tiers from sparse (bright) to dense (dark), each with several character options.
 const ASCII_TIERS = [
-  [' '],                         // tier 0: brightest — blank
-  ['·', ':', '~', '-'],          // tier 1: light
-  ['+', '×', '=', '*', '÷'],    // tier 2: mid-light
-  ['#', '%', '$', '&', 'X'],    // tier 3: mid-dark
-  ['@', 'W', 'M', '█', '■'],   // tier 4: darkest — heaviest
+  [' '],                                                                                           // tier 0: brightest — blank
+  ['.', '\u00b7', ',', '`', "'", ':', ';', '-', '~'],                                             // tier 1: light
+  ['!', '?', '/', '\\', '|', '(', ')', '<', '>', '+', '=', '*', '^', '"'],                        // tier 2: mid-light
+  ['a', 'c', 'e', 'o', 'r', 's', 'x', 'z', 'n', 'v', '1', '2', '3', '7', '{', '}', '[', ']'],   // tier 3: mid
+  ['A', 'G', 'H', 'K', 'R', 'S', 'Z', '%', '$', '&', '#', '\u00a7', '\u03a3', '\u03a9', '\u03b4'], // tier 4: dense
+  ['@', 'W', 'M', 'B', 'N', 'Q', '\u2588', '\u25a0', '\u2593', '\u2592', '\u2591'],              // tier 5: heaviest
 ];
 
 
@@ -131,7 +132,7 @@ export function drawAsciiChar(
   timeSec?: number
 ): void {
   // Pick density tier — skip tier 0 (blank), so every cell gets a character.
-  // Remap brightness to tiers 1–4 only.
+  // Remap brightness to tiers 1–5.
   const tierIdx = Math.min(
     ASCII_TIERS.length - 1,
     Math.max(1, Math.floor((1 - brightness / 255) * ASCII_TIERS.length))
