@@ -86,12 +86,10 @@ const fragmentShaderSource = `
   void main() {
     vec2 uv = gl_FragCoord.xy / u_resolution.xy;
 
-    // Mosaic grid — square blocks (45px based on height, aspect-corrected)
+    // Mosaic grid — guaranteed square blocks in pixel space
     float blockPx = 45.0;
-    float cellSize = blockPx / u_resolution.y; // normalize to height
-    vec2 grid = vec2(1.0 / (cellSize * u_resolution.y / u_resolution.x), 1.0 / cellSize);
-    vec2 cellId = floor(uv * grid);
-    vec2 pixelUv = (cellId + 0.5) / grid;
+    vec2 cellId = floor(gl_FragCoord.xy / blockPx);
+    vec2 pixelUv = (cellId * blockPx + blockPx * 0.5) / u_resolution.xy;
 
     float colOffset = hash(vec2(cellId.x, 0.0)) * 0.025;
     pixelUv.y += colOffset;
