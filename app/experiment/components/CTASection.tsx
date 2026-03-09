@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react'
 import ScrollDecode from './ScrollDecode'
 import WavesCanvas from './WavesCanvas'
 import ArrowIcon from './ArrowIcon'
+import FooterGradientText from './FooterGradientText'
 
 export default function CTASection() {
   const ctaRef = useRef<HTMLDivElement>(null)
@@ -104,19 +105,9 @@ export default function CTASection() {
         </div>
       </div>
 
-      {/* Footer waves canvas (Isidor .footer with createWaves) */}
+      {/* Footer: large gradient text */}
       <footer className="exp-footer">
-        <WavesCanvas
-          lineColor="rgba(255, 255, 255, 0.18)"
-          waveAmp={25}
-          waveSpeed={0.003}
-          xGap={12}
-          yGap={32}
-          lineWidth={1}
-          mouseInteraction={true}
-          className="exp-footer-waves"
-          style={{ width: '100%', height: '180px' }}
-        />
+        <FooterGradientText />
       </footer>
     </>
   )

@@ -1893,6 +1893,32 @@ html:has(.experiment) { scroll-behavior: auto; }
   letter-spacing: 0.05em;
 }
 
+/* Footer gradient text — large "Progression Labs" clipping the pixel gradient */
+.exp-footer-gradient-text {
+  position: relative;
+  width: 100%;
+  padding: 80px 0;
+  overflow: hidden;
+  background: #000;
+  isolation: isolate;
+}
+
+.exp-footer-gradient-heading {
+  position: relative;
+  z-index: 1;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: clamp(48px, 10vw, 160px);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  text-align: center;
+  margin: 0;
+  padding: 0 24px;
+  color: #fff;
+  background: #000;
+  mix-blend-mode: multiply;
+}
+
 /* Hero CTA buttons */
 .exp-hero-buttons {
   display: flex;
