@@ -1165,6 +1165,14 @@ html:has(.experiment) { scroll-behavior: auto; }
    FIND YOUR FIT (interactive quiz)
    ============================================ */
 
+/* ── Find Your Fit: both columns align at top, no sticky scroll ── */
+.exp-finder .exp-col-label,
+.exp-finder .exp-col-content {
+  position: relative;
+  top: auto;
+  align-self: start;
+}
+
 /* Dot progress indicator */
 /* ── FindYourFit progress dots ── */
 .exp-finder-progress {

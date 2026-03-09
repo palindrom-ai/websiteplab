@@ -79,33 +79,30 @@ const fragmentShaderSource = `
     float colorMix = clamp(verticalBias + (swirl - 0.5) * 1.0, 0.0, 1.0);
     vec3 peak = mix(peakA, peakB, colorMix);
 
-    // 5-zone luminance ramp — matched to hero for vivid dual-color display
+    // 4-zone luminance ramp — vivid dual colors, no white washout
     vec3 deep = peak * 0.06;
     vec3 mid  = peak * 0.35;
-    vec3 wash = mix(peak, vec3(1.0), 0.5);
+    vec3 wash = mix(peak, vec3(1.0), 0.2);
 
     float t1 = smoothstep(0.00, 0.10, gp);
     float t2 = smoothstep(0.06, 0.24, gp);
     float t3 = smoothstep(0.15, 0.55, gp);
-    float t4 = smoothstep(0.45, 0.85, gp);
-    float t5 = smoothstep(0.75, 1.00, gp);
+    float t4 = smoothstep(0.60, 0.95, gp);
 
     vec3 color = mix(vec3(0.004), deep, t1);
     color = mix(color, mid, t2);
     color = mix(color, peak, t3);
     color = mix(color, wash, t4);
-    color = mix(color, vec3(1.0), t5);
     return color;
   }
 
   void main() {
     vec2 uv = gl_FragCoord.xy / u_resolution.xy;
 
-    // === Mosaic Grid — 45px blocks (same as hero) ===
+    // === Mosaic Grid — 45px square blocks (quantize in pixel space) ===
     float blockPx = 45.0;
-    vec2 grid = u_resolution / blockPx;
-    vec2 cellId = floor(uv * grid);
-    vec2 pixelUv = (cellId + 0.5) / grid;
+    vec2 cellId = floor(gl_FragCoord.xy / blockPx);
+    vec2 pixelUv = (cellId * blockPx + blockPx * 0.5) / u_resolution.xy;
 
     // Per-column offset
     float colOffset = hash(vec2(cellId.x, 0.0)) * 0.025;
@@ -156,17 +153,17 @@ const fragmentShaderSource = `
     float y = pixelUv.y;
 
     // Wavy edge — deeper dips, organic living movement
-    float wave = sin(pixelUv.x * 3.5 + 1.2 + u_time * 0.6) * 0.12
-               + sin(pixelUv.x * 8.0 + 3.7 - u_time * 0.45) * 0.07
-               + cos(pixelUv.x * 5.5 + 0.5 + u_time * 0.35) * 0.08
-               + sin(pixelUv.x * 12.0 + u_time * 0.8) * 0.03;
+    float wave = sin(pixelUv.x * 3.5 + 1.2 + u_time * 0.6) * 0.18
+               + sin(pixelUv.x * 8.0 + 3.7 - u_time * 0.45) * 0.10
+               + cos(pixelUv.x * 5.5 + 0.5 + u_time * 0.35) * 0.12
+               + sin(pixelUv.x * 12.0 + u_time * 0.8) * 0.05;
 
-    // Left side extends much further down — wide gradual taper
-    float leftPush = (1.0 - smoothstep(0.0, 0.75, pixelUv.x)) * 0.65;
-    float rightPush = (1.0 - smoothstep(0.6, 1.0, pixelUv.x)) * 0.10;
+    // Both sides extend further down — pixels reach the bottom
+    float leftPush = (1.0 - smoothstep(0.0, 0.75, pixelUv.x)) * 0.85;
+    float rightPush = (1.0 - smoothstep(0.4, 1.0, pixelUv.x)) * 0.25;
     float edgePush = leftPush + rightPush;
 
-    float alpha = smoothstep(-0.35, 0.65, y + wave + edgePush);
+    float alpha = smoothstep(-0.55, 0.50, y + wave + edgePush);
 
     gl_FragColor = vec4(color, alpha);
   }
