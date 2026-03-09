@@ -1,8 +1,31 @@
 'use client'
 
+import { useEffect, useRef } from 'react'
+
 export default function LogoMarquee() {
+  const sectionRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    let ctx: { revert: () => void } | null = null
+    const initGsap = async () => {
+      const { default: gsap } = await import('gsap')
+      const { ScrollTrigger } = await import('gsap/ScrollTrigger')
+      gsap.registerPlugin(ScrollTrigger)
+      const el = sectionRef.current
+      if (!el) return
+      ctx = gsap.context(() => {
+        gsap.fromTo(el, { opacity: 0, y: 30 }, {
+          opacity: 1, y: 0, duration: 0.8, ease: 'power2.out',
+          scrollTrigger: { trigger: el, start: 'top 90%', once: true },
+        })
+      })
+    }
+    initGsap()
+    return () => { ctx?.revert() }
+  }, [])
+
   return (
-    <div className="exp-logo-static">
+    <div ref={sectionRef} className="exp-logo-static" style={{ opacity: 0 }}>
       <div className="exp-tag">Select Tier Partner</div>
       <div className="exp-logo-static-row">
         {/* Inline SVG — no external file dependency */}

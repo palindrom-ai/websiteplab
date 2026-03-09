@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
+import { SHARED_START } from './sharedTime'
 
 interface HeroGradientGLProps {
   revealTrigger: boolean
@@ -238,14 +239,14 @@ export default function HeroGradientGL({ revealTrigger }: HeroGradientGLProps) {
     const mesh = new THREE.Mesh(geometry, material)
     scene.add(mesh)
 
-    startRef.current = performance.now() / 1000
+    startRef.current = SHARED_START
 
     // Continuous render loop — uTime + damped mouse tracking
     const dampingSpeed = 0.08
     const tick = () => {
       if (!mountedRef.current) return
       const now = performance.now() / 1000
-      material.uniforms.uTime.value = now - startRef.current
+      material.uniforms.uTime.value = now - SHARED_START
 
       // Lerp uMouse toward mouseTarget for fluid trailing
       const mouse = material.uniforms.uMouse.value

@@ -65,30 +65,36 @@ const fragmentShaderSource = `
     peakB = mix(fB, tB, t);
   }
 
-  // Gradient with noise-driven color swirl (same technique as hero)
+  // Gradient with noise-driven color swirl (matched to hero 5-zone ramp)
   vec3 computeGradient(vec2 uv, float time, vec3 peakA, vec3 peakB) {
     float gp = uv.y;
 
-    // Color swirl between peakA and peakB
+    // Color swirl between peakA and peakB — 3 octaves like hero
     float n1 = vnoise(uv * 1.8 + vec2(time * 0.10, time * 0.07));
     float n2 = vnoise(uv * 3.5 + vec2(-time * 0.08, time * 0.12));
-    float swirl = n1 * 0.6 + n2 * 0.4;
+    float n3 = vnoise(uv * 6.0 + vec2(time * 0.15, -time * 0.06));
+    float swirl = n1 * 0.5 + n2 * 0.3 + n3 * 0.2;
 
     float verticalBias = smoothstep(0.05, 0.95, gp);
     float colorMix = clamp(verticalBias + (swirl - 0.5) * 1.0, 0.0, 1.0);
     vec3 peak = mix(peakA, peakB, colorMix);
 
-    // Luminance ramp: extends further down but doesn't wash out the top
-    vec3 deep = peak * 0.08;
+    // 5-zone luminance ramp — matched to hero for vivid dual-color display
+    vec3 deep = peak * 0.06;
     vec3 mid  = peak * 0.35;
+    vec3 wash = mix(peak, vec3(1.0), 0.5);
 
     float t1 = smoothstep(0.00, 0.10, gp);
-    float t2 = smoothstep(0.05, 0.25, gp);
+    float t2 = smoothstep(0.06, 0.24, gp);
     float t3 = smoothstep(0.15, 0.55, gp);
+    float t4 = smoothstep(0.45, 0.85, gp);
+    float t5 = smoothstep(0.75, 1.00, gp);
 
     vec3 color = mix(vec3(0.004), deep, t1);
     color = mix(color, mid, t2);
-    color = mix(color, peak * 0.8, t3);
+    color = mix(color, peak, t3);
+    color = mix(color, wash, t4);
+    color = mix(color, vec3(1.0), t5);
     return color;
   }
 
@@ -155,8 +161,8 @@ const fragmentShaderSource = `
                + cos(pixelUv.x * 5.5 + 0.5 + u_time * 0.35) * 0.08
                + sin(pixelUv.x * 12.0 + u_time * 0.8) * 0.03;
 
-    // Left side extends much further down
-    float leftPush = (1.0 - smoothstep(0.0, 0.6, pixelUv.x)) * 0.45;
+    // Left side extends much further down — wide gradual taper
+    float leftPush = (1.0 - smoothstep(0.0, 0.75, pixelUv.x)) * 0.65;
     float rightPush = (1.0 - smoothstep(0.6, 1.0, pixelUv.x)) * 0.10;
     float edgePush = leftPush + rightPush;
 

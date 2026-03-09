@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useCallback } from 'react'
+import { useRef, useCallback, useEffect } from 'react'
 import ScrollDecode from './ScrollDecode'
 import PanelCorners from './PanelCorners'
 import DepixelateAvatar from './DepixelateAvatar'
@@ -112,8 +112,33 @@ function MarqueeRow({ direction = 'left', speed = '25s' }: { direction?: 'left' 
  * Photos are pixelated by default; hover triggers a cell-by-cell de-pixelation reveal.
  */
 export default function ExperimentTeamSection() {
+  const sectionRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    let ctx: { revert: () => void } | null = null
+    const initGsap = async () => {
+      const { default: gsap } = await import('gsap')
+      const { ScrollTrigger } = await import('gsap/ScrollTrigger')
+      gsap.registerPlugin(ScrollTrigger)
+      const el = sectionRef.current
+      if (!el) return
+      const header = el.querySelector('.exp-team-header')
+      const rows = el.querySelector('.exp-team-rows')
+      const targets = [header, rows].filter(Boolean)
+      if (targets.length === 0) return
+      ctx = gsap.context(() => {
+        gsap.fromTo(targets, { opacity: 0, y: 40 }, {
+          opacity: 1, y: 0, duration: 0.8, stagger: 0.15, ease: 'power2.out',
+          scrollTrigger: { trigger: el, start: 'top 85%', once: true },
+        })
+      })
+    }
+    initGsap()
+    return () => { ctx?.revert() }
+  }, [])
+
   return (
-    <div className="exp-team-section">
+    <div ref={sectionRef} className="exp-team-section">
       <div className="exp-team-header">
         <div className="exp-tag">Team</div>
         <ScrollDecode

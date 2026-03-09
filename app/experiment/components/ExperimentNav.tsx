@@ -29,7 +29,7 @@ const ExperimentNav = forwardRef<HTMLElement, ExperimentNavProps>(
             <img
               src={isDark ? '/logo-white.png' : '/logo-black.png'}
               alt="Progression Labs"
-              style={{ height: 28, width: 'auto' }}
+              style={{ height: 22, width: 'auto' }}
             />
           </div>
           <span

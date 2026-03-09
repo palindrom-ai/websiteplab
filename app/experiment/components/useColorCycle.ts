@@ -1,39 +1,59 @@
 'use client'
 
 import { useEffect, useRef, useCallback } from 'react'
+import { SHARED_START } from './sharedTime'
 
-// Brand palette (synced with hero shader)
-const BRAND_COLORS: [number, number, number][] = [
-  [186, 85, 211],
-  [255, 160, 122],
-  [185, 233, 121],
-  [64, 224, 208],
-  [0, 0, 255],
+// Brand palette — same 5 colors as hero shader
+const cO: [number, number, number] = [186, 85, 211]   // Orchid
+const cS: [number, number, number] = [255, 160, 122]   // Salmon
+const cG: [number, number, number] = [185, 233, 121]   // Green
+const cT: [number, number, number] = [64, 224, 208]     // Turquoise
+const cB: [number, number, number] = [0, 0, 255]        // Blue
+
+// 9-state dual-color cycle — mirrors hero shader exactly
+const STATES: [[number,number,number],[number,number,number],[number,number,number],[number,number,number]][] = [
+  [cO, cO, cB, cS], // 0: Orchid → Blue + Salmon
+  [cB, cS, cG, cG], // 1: Blue + Salmon → Green
+  [cG, cG, cO, cT], // 2: Green → Orchid + Turquoise
+  [cO, cT, cS, cS], // 3: Orchid + Turquoise → Salmon
+  [cS, cS, cB, cT], // 4: Salmon → Blue + Turquoise
+  [cB, cT, cB, cB], // 5: Blue + Turquoise → Blue
+  [cB, cB, cO, cG], // 6: Blue → Orchid + Green
+  [cO, cG, cT, cT], // 7: Orchid + Green → Turquoise
+  [cT, cT, cO, cO], // 8: Turquoise → Orchid
 ]
-const CYCLE_SEC = 30
+
+const CYCLE_SEC = 45
 function ssmooth(t: number) { return t * t * (3 - 2 * t) }
+
+function lerp(a: number, b: number, t: number) { return a + (b - a) * t }
 
 type ColorCallback = (r: number, g: number, b: number) => void
 
 // Singleton RAF loop — all subscribers share one animation frame
 const subscribers = new Set<ColorCallback>()
 let rafId: number | null = null
-let startTime: number | null = null
 
 function tick() {
-  if (startTime === null) startTime = performance.now() / 1000
-
-  const elapsed = performance.now() / 1000 - startTime
-  const progress = (elapsed % CYCLE_SEC) / CYCLE_SEC
-  const segProgress = progress * 5
-  const segIndex = Math.floor(segProgress) % 5
+  const elapsed = performance.now() / 1000 - SHARED_START
+  const progress = ((elapsed % CYCLE_SEC) + CYCLE_SEC) % CYCLE_SEC / CYCLE_SEC
+  const segProgress = progress * 9
+  const segIndex = Math.min(Math.floor(segProgress), 8)
   const t = ssmooth(segProgress - Math.floor(segProgress))
 
-  const from = BRAND_COLORS[segIndex]
-  const to = BRAND_COLORS[(segIndex + 1) % 5]
-  const r = Math.round(from[0] + (to[0] - from[0]) * t)
-  const g = Math.round(from[1] + (to[1] - from[1]) * t)
-  const b = Math.round(from[2] + (to[2] - from[2]) * t)
+  const [fA, fB, tA, tB] = STATES[segIndex]
+  // Blend from→to for each of the dual colors, then average them
+  const peakAr = lerp(fA[0], tA[0], t)
+  const peakAg = lerp(fA[1], tA[1], t)
+  const peakAb = lerp(fA[2], tA[2], t)
+  const peakBr = lerp(fB[0], tB[0], t)
+  const peakBg = lerp(fB[1], tB[1], t)
+  const peakBb = lerp(fB[2], tB[2], t)
+
+  // Average of both peaks — represents the dominant hue on screen
+  const r = Math.round((peakAr + peakBr) / 2)
+  const g = Math.round((peakAg + peakBg) / 2)
+  const b = Math.round((peakAb + peakBb) / 2)
 
   subscribers.forEach(cb => cb(r, g, b))
 
@@ -43,7 +63,6 @@ function tick() {
 function subscribe(cb: ColorCallback) {
   subscribers.add(cb)
   if (subscribers.size === 1) {
-    startTime = null
     rafId = requestAnimationFrame(tick)
   }
   return () => {
@@ -51,7 +70,6 @@ function subscribe(cb: ColorCallback) {
     if (subscribers.size === 0 && rafId !== null) {
       cancelAnimationFrame(rafId)
       rafId = null
-      startTime = null
     }
   }
 }
