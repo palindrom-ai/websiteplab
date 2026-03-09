@@ -77,25 +77,19 @@ const fragmentShaderSource = `
     float colorMix = clamp(verticalBias + (swirl - 0.5) * 0.4, 0.0, 1.0);
     vec3 peak = mix(peakA, peakB, colorMix);
 
-    vec3 deep = peak * 0.08;
-    vec3 mid  = peak * 0.35;
-
-    float t1 = smoothstep(0.00, 0.10, gp);
-    float t2 = smoothstep(0.05, 0.25, gp);
-    float t3 = smoothstep(0.15, 0.55, gp);
-
-    vec3 color = mix(vec3(0.004), deep, t1);
-    color = mix(color, mid, t2);
-    color = mix(color, peak * 0.8, t3);
+    // Single continuous ramp — no visible bands
+    float ramp = smoothstep(0.0, 1.0, gp);
+    vec3 color = mix(vec3(0.004), peak * 0.85, ramp);
     return color;
   }
 
   void main() {
     vec2 uv = gl_FragCoord.xy / u_resolution.xy;
 
-    // Mosaic grid — 45px blocks
+    // Mosaic grid — square blocks (45px based on height, aspect-corrected)
     float blockPx = 45.0;
-    vec2 grid = u_resolution / blockPx;
+    float cellSize = blockPx / u_resolution.y; // normalize to height
+    vec2 grid = vec2(1.0 / (cellSize * u_resolution.y / u_resolution.x), 1.0 / cellSize);
     vec2 cellId = floor(uv * grid);
     vec2 pixelUv = (cellId + 0.5) / grid;
 
