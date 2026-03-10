@@ -17,7 +17,7 @@ export function TopBar() {
     <header className="h-16 bg-white border-b border-[rgba(0,0,0,0.08)] flex items-center justify-between px-8 sticky top-0 z-40">
       <div className="flex items-center gap-3">
         <h1 className="text-[15px] font-semibold tracking-[-0.02em]">
-          Progression OS
+          Progression Labs
         </h1>
         <Badge variant="orchid">Beta</Badge>
       </div>

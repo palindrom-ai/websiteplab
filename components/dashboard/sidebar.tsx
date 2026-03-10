@@ -77,7 +77,7 @@ export function Sidebar() {
           className="h-4 w-auto"
         />
         <span className="text-[15px] font-semibold tracking-[-0.03em]">
-          Progression OS
+          Progression Labs
         </span>
       </div>
 
@@ -111,7 +111,7 @@ export function Sidebar() {
       {/* Footer */}
       <div className="px-5 py-4 border-t border-[rgba(0,0,0,0.08)]">
         <p className="text-[11px] text-text-tertiary">
-          Progression OS v1.0
+          Progression Labs v1.0
         </p>
       </div>
     </aside>
