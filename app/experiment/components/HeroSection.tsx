@@ -16,27 +16,25 @@ interface HeroSectionProps {
   onBrandReveal: () => void
 }
 
+const HEADLINE = "We're building custom AI agents that scale for the most complex problems in the real world"
+const HEADLINE_JSX = (
+  <>
+    We&apos;re building <strong>custom AI agents</strong> that scale
+    for the <strong>most complex problems</strong> in the{' '}
+    <strong>real world</strong>
+  </>
+)
+
 const HERO_VARIANTS = {
   control: {
-    headline: "We're building custom AI agents that scale for the most complex problems in the real world",
-    headlineJsx: (
-      <>
-        We&apos;re building <strong>custom AI agents</strong> that scale
-        for the <strong>most complex problems</strong> in the{' '}
-        <strong>real world</strong>
-      </>
-    ),
+    headline: HEADLINE,
+    headlineJsx: HEADLINE_JSX,
     cta: 'Request a brainstorm',
   },
   variant: {
-    headline: "Your team, supercharged with AI agents that actually ship to production",
-    headlineJsx: (
-      <>
-        Your team, <strong>supercharged</strong> with AI agents
-        that actually <strong>ship to production</strong>
-      </>
-    ),
-    cta: 'Book a free strategy call',
+    headline: HEADLINE,
+    headlineJsx: HEADLINE_JSX,
+    cta: 'Start a conversation',
   },
 } as const
 

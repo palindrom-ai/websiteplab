@@ -8,16 +8,20 @@ import { useColorCycle } from './useColorCycle'
 import PixelGradientCanvas from './PixelGradientCanvas'
 import FinderAsciiOverlay from './FinderAsciiOverlay'
 import { BRAINSTORM_HREF, openBrainstormEmail } from './brainstormMailto'
+import { useFeatureFlagVariantKey } from '@posthog/react'
 import posthog from 'posthog-js'
-import { ROLES, JOURNEYS, RECOMMENDATIONS, type Role, type Journey } from '../data/siteContent'
+import { ROLES, JOURNEYS, RECOMMENDATIONS, RECOMMENDATIONS_VARIANT, FINDER_VARIANT, type Role, type Journey } from '../data/siteContent'
 
 const TYPING_SPEED = 35 // ms per character
 
 const roles = ROLES
 const journeys = JOURNEYS
-const recommendations = RECOMMENDATIONS
 
 export default function FindYourFit() {
+  const flagVariant = useFeatureFlagVariantKey('hero-ab-test')
+  const isVariant = flagVariant === 'variant'
+  const recommendations = isVariant ? RECOMMENDATIONS_VARIANT : RECOMMENDATIONS
+
   const [step, setStep] = useState(0)
   const [selectedRole, setSelectedRole] = useState<Role | null>(null)
   const [selectedJourney, setSelectedJourney] = useState<Journey | null>(null)
@@ -233,7 +237,7 @@ export default function FindYourFit() {
             <div className="exp-finder-step exp-finder-step--visible">
               <div className="exp-terminal-prompt">
                 <span className="exp-terminal-caret">&gt;</span>
-                <span className="exp-terminal-text">What&apos;s your role?</span>
+                <span className="exp-terminal-text">{isVariant ? FINDER_VARIANT.stepPrompts[0] : "What\u2019s your role?"}</span>
                 {!typedText && !isTyping && <span className="exp-terminal-cursor" />}
               </div>
               <div className="exp-terminal-keys">
@@ -262,7 +266,7 @@ export default function FindYourFit() {
             <div className="exp-finder-step exp-finder-step--visible">
               <div className="exp-terminal-prompt">
                 <span className="exp-terminal-caret">&gt;</span>
-                <span className="exp-terminal-text">Where are you on your AI journey?</span>
+                <span className="exp-terminal-text">{isVariant ? FINDER_VARIANT.stepPrompts[1] : 'Where are you on your AI journey?'}</span>
                 {!typedText && !isTyping && <span className="exp-terminal-cursor" />}
               </div>
               <div className="exp-terminal-keys">
@@ -291,7 +295,7 @@ export default function FindYourFit() {
             <div className="exp-finder-step exp-finder-step--visible">
               <div className={`exp-terminal-line${resultLines >= 1 ? ' exp-terminal-line--visible' : ''}`}>
                 <div className="exp-terminal-divider">
-                  Analysis complete
+                  {isVariant ? FINDER_VARIANT.resultHeader : 'Analysis complete'}
                 </div>
               </div>
               <div className={`exp-terminal-line${resultLines >= 2 ? ' exp-terminal-line--visible' : ''}`}>
@@ -329,7 +333,7 @@ export default function FindYourFit() {
                 })
                 handleReset()
               }}>
-                &gt; reset
+                {isVariant ? FINDER_VARIANT.resetLabel : '> reset'}
               </button>
             </div>
           )}
