@@ -110,10 +110,6 @@ export default function CTASection() {
           </div>
         </div>
 
-        {/* Brand name — atmospheric, not a text fill */}
-        <div className="exp-footer-brand">
-          <span className="exp-footer-brand-text">Progression Labs</span>
-        </div>
       </footer>
     </>
   )
