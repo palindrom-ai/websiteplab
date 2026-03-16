@@ -16,6 +16,8 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
     })
 
     lenisRef.current = lenis
+    // Expose Lenis globally so view toggle scroll sync can use it
+    ;(window as any).__lenis = lenis
 
     // Sync Lenis with GSAP's ticker — single frame clock, no fighting
     const connectScrollTrigger = async () => {

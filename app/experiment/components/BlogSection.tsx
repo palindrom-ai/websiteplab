@@ -2,54 +2,9 @@
 
 import { useEffect, useRef, useCallback } from 'react'
 import ScrollDecode from './ScrollDecode'
+import { BLOG_POSTS } from '../data/siteContent'
 
-interface BlogPost {
-  category: string
-  date: string
-  title: string
-  excerpt: string
-  image?: string
-  video?: string
-}
-
-const posts: BlogPost[] = [
-  {
-    category: 'Engineering',
-    date: '2026-02-28',
-    title: 'Vibe Coding and the Death of Syntax',
-    excerpt:
-      'Karpathy coined it — programming via natural language, forgetting code exists. What this means for engineering teams and the future of software craft.',
-    image: '/blog/vibe-coding.png',
-    video: '/blog/blue-white-horse.mp4',
-  },
-  {
-    category: 'Insights',
-    date: '2026-02-12',
-    title: 'Ghost Intelligence: Why LLMs Are Not What You Think',
-    excerpt:
-      'LLMs are "summoned ghosts", not gradually evolving animals. A fundamentally new type of intelligence that demands a new mental model.',
-    image: '/blog/ghost-intelligence.png',
-    video: '/blog/green-yellow-frog.mp4',
-  },
-  {
-    category: 'Strategy',
-    date: '2026-01-24',
-    title: 'RLVR: The Quiet Revolution in How Models Learn to Reason',
-    excerpt:
-      'Reinforcement Learning from Verifiable Rewards — the shift from probabilistic imitation to logical reasoning that defined 2025.',
-    image: '/blog/rlvr-revolution.png',
-    video: '/blog/vibrant-green-flower.mp4',
-  },
-  {
-    category: 'Process',
-    date: '2026-01-08',
-    title: 'The Magnitude 9 Earthquake: Engineering in the Agent Era',
-    excerpt:
-      'The profession is being dramatically refactored — agents, subagents, prompts, MCP, tools, plugins. How to ride the wave instead of drowning in it.',
-    image: '/blog/magnitude-earthquake.png',
-    video: '/blog/salmon-pink-jelly.mp4',
-  },
-]
+const posts = BLOG_POSTS
 
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr + 'T00:00:00')

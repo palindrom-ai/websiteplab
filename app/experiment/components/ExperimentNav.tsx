@@ -4,12 +4,7 @@ import { forwardRef } from 'react'
 import ShuffleHover from './ShuffleHover'
 import ArrowIcon from './ArrowIcon'
 import { useTheme } from './ThemeProvider'
-
-const NAV_LINKS = [
-  { label: 'Services', href: '#services' },
-  { label: 'Proof', href: '#work' },
-  { label: 'Contact', href: '#contact' },
-]
+import { NAV_LINKS } from '../data/siteContent'
 
 interface ExperimentNavProps {
   showBrand?: boolean
