@@ -119,18 +119,17 @@ const fragmentShaderSource = `
     vec3 pixelColor = computeGradient(pixelUv, u_time, peakA, peakB);
     pixelColor += (hash(cellId) - 0.5) * 0.035;
 
-    // === EDGE MASK — wide pixel border, smooth only in deep center ===
-    float edgeL = smoothstep(0.0, 0.25, uv.x);
-    float edgeR = smoothstep(1.0, 0.75, uv.x);
-    float edgeT = smoothstep(1.0, 0.75, uv.y);
-    float edgeB = smoothstep(0.0, 0.30, uv.y);
-    float interior = edgeL * edgeR * edgeT * edgeB;
+    // === EDGE MASK — thin pixel border at edges, smooth center ===
+    float edgeL = smoothstep(0.0, 0.15, uv.x);
+    float edgeR = smoothstep(1.0, 0.85, uv.x);
+    float edgeT = smoothstep(1.0, 0.88, uv.y);
+    float interior = edgeL * edgeR * edgeT;
+    float edgePix = 1.0 - interior;
 
-    // === BRIGHTNESS-DRIVEN PIXELATION — disperses color blobs at edges ===
-    // Use max channel instead of perceptual luminance so blue is treated equally
+    // === BRIGHTNESS-DRIVEN PIXELATION (helps transition zone) ===
     float intensity = max(smoothColor.r, max(smoothColor.g, smoothColor.b));
-    float edgeProximity = 1.0 - interior; // 0 in center, 1 at edges
-    float brightPixel = smoothstep(0.15, 0.5, intensity) * edgeProximity * 0.8;
+    float transitionZone = smoothstep(0.0, 0.5, edgePix);
+    float brightPixel = smoothstep(0.15, 0.5, intensity) * transitionZone * 0.8;
 
     // === DIAGONAL SHIMMER ===
     float diag = (uv.x + 1.0 - uv.y) * 0.5;
@@ -139,8 +138,8 @@ const fragmentShaderSource = `
     shimmerDist = min(shimmerDist, 1.0 - shimmerDist);
     float shimmerMask = exp(-shimmerDist * shimmerDist * 120.0) * 0.6;
 
-    // Combine: edges + bright areas + shimmer all push toward pixel blocks
-    float pixelAmount = max(max(1.0 - interior, brightPixel), shimmerMask);
+    // Combine: edges + bright transition areas + shimmer (no base floor)
+    float pixelAmount = max(max(edgePix, brightPixel), shimmerMask);
 
     // The pixel color IS the "ASCII" — flat blocky colors vs smooth gradient
     vec3 color = mix(smoothColor, pixelColor, pixelAmount);
