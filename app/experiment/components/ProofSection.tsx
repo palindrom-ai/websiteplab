@@ -1,24 +1,9 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
+import { TESTIMONIALS } from '../data/siteContent'
 
-const testimonials = [
-  {
-    quote: "They've gone beyond just a number of engineers that I'm outsourcing AI for. They truly have been a thought partner, someone that's been very dependable and someone who helped us shape our strategy.",
-    author: 'Dipak Patel',
-    role: 'CEO of Globo',
-  },
-  {
-    quote: 'Progression Labs transformed our approach to AI implementation. Their team delivered beyond our expectations and helped us achieve results we didn\'t think were possible.',
-    author: 'Sarah Chen',
-    role: 'CTO of TechVentures',
-  },
-  {
-    quote: 'Working with Progression Labs has been a game-changer. They brought deep expertise and a collaborative approach that made all the difference in our AI journey.',
-    author: 'Michael Roberts',
-    role: 'VP Engineering at DataFlow',
-  },
-]
+const testimonials = TESTIMONIALS
 
 export default function ProofSection() {
   const sectionRef = useRef<HTMLDivElement>(null)

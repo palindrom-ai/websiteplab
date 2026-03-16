@@ -1,0 +1,353 @@
+'use client'
+
+import { useEffect, useRef } from 'react'
+import * as THREE from 'three'
+import { useThemeColors } from './useThemeColors'
+
+interface HeroGradientGLProps {
+  revealTrigger: boolean
+}
+
+const vertexShader = `
+  varying vec2 vUv;
+  void main() {
+    vUv = uv;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`
+
+// Single-pass fragment shader: smooth gradient + active LED grid shimmer + page-load reveal
+const fragmentShader = `
+    precision highp float;
+
+    uniform float uTime;           // elapsed seconds
+    uniform float uRevealProgress; // 0 = dark grid, 1 = full gradient (page-load)
+    uniform vec2 uResolution;      // container size in px
+    uniform vec2 uMouse;           // damped mouse position in UV space (0-1)
+    uniform float uMouseActive;    // 0 = not hovering, 1 = hovering (GSAP-animated)
+    uniform float uIsDark;         // 1.0 = dark mode, 0.0 = light mode
+
+    varying vec2 vUv;
+
+    // ─── Cubic smoothstep for organic keyframe easing ───
+    float ssmooth(float t) {
+      return t * t * (3.0 - 2.0 * t);
+    }
+
+    // ─── Per-cell deterministic random (for page-load reveal & shimmer) ───
+    float hash(vec2 p) {
+      return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+    }
+
+    // ─── 7-stop gradient ramp from near-black to white ───
+    vec3 computeGradient(float gp, vec3 peak) {
+      vec3 deep = peak * 0.15;
+      vec3 mid1 = peak * 0.40;
+      vec3 mid2 = peak * 0.70;
+      vec3 baseColor = mix(vec3(0.96), vec3(0.004), uIsDark);
+      if (gp < 0.03) return mix(baseColor, deep, gp / 0.03);
+      else if (gp < 0.15) return mix(deep, mid1, (gp - 0.03) / 0.12);
+      else if (gp < 0.30) return mix(mid1, mid2, (gp - 0.15) / 0.15);
+      else if (gp < 0.55) return mix(mid2, peak, (gp - 0.30) / 0.25);
+      else if (gp < 0.95) return mix(peak, vec3(1.0), (gp - 0.55) / 0.40);
+      else return vec3(1.0);
+    }
+
+    // ═══ 1. PURE COLOR GENERATION ═══
+    vec3 getGradientColor(vec2 uv) {
+      vec3 cOrchid    = vec3(0.729, 0.333, 0.827); // #BA55D3
+      vec3 cSalmon    = vec3(1.000, 0.627, 0.478); // #FFA07A
+      vec3 cGreen     = vec3(0.725, 0.914, 0.475); // #B9E979
+      vec3 cTurquoise = vec3(0.251, 0.878, 0.816); // #40E0D0
+      vec3 cBlue      = vec3(0.000, 0.000, 1.000); // #0000FF
+
+      float cycleSec = 30.0;
+      float progress = mod(uTime, cycleSec) / cycleSec;
+      float segProgress = progress * 5.0;
+      int segIndex = int(floor(segProgress));
+      float t = ssmooth(segProgress - floor(segProgress));
+
+      vec3 fromColor, toColor;
+      if (segIndex == 0)      { fromColor = cOrchid;    toColor = cSalmon;    }
+      else if (segIndex == 1) { fromColor = cSalmon;    toColor = cGreen;     }
+      else if (segIndex == 2) { fromColor = cGreen;     toColor = cTurquoise; }
+      else if (segIndex == 3) { fromColor = cTurquoise; toColor = cBlue;      }
+      else                    { fromColor = cBlue;      toColor = cOrchid;    }
+
+      vec3 peakColor = mix(fromColor, toColor, t);
+      float gp = 1.0 - uv.y;
+      return computeGradient(gp, peakColor);
+    }
+
+    void main() {
+      // ═══ 2. DUAL TEXTURES (Smooth vs Grid) ═══
+      vec3 smoothColor = getGradientColor(vUv);
+
+      float blockPx = 45.0; // Size of the LED blocks
+      vec2 grid = uResolution / blockPx;
+      vec2 cellIndex = floor(vUv * grid);
+
+      // Calculate color based on the CENTER of the cell so the whole block is one solid color
+      vec2 pixelUv = (cellIndex + 0.5) / grid;
+      vec3 pixelColor = getGradientColor(pixelUv);
+
+      // ═══ 3. ACTIVE LED SHIMMER MASK ═══
+      // Distance is calculated from the cell center, forcing strict grid snapping (no blurry half-blocks)
+      float aspect = uResolution.x / uResolution.y;
+      vec2 aspectVec = vec2(aspect, 1.0);
+      float dist = distance(pixelUv * aspectVec, uMouse * aspectVec);
+
+      // Base radius of the mouse interaction
+      float baseMask = exp(-dist * dist * 12.0) * uMouseActive;
+
+      // Generate a high-frequency, time-stepped noise for this specific cell (approx 12 fps flicker)
+      float timeStep = floor(uTime * 12.0);
+      float cellNoise = hash(cellIndex + vec2(timeStep, -timeStep));
+
+      // Combine distance and noise. We boost noise slightly so the center is very active
+      float intensity = baseMask * (cellNoise * 1.5 + 0.1);
+
+      // Quantize the intensity into distinct "stepped" levels (Off, Dim, Bright)
+      // This creates the retro digital aesthetic instead of a smooth fade
+      float steppedShimmer = floor(clamp(intensity, 0.0, 1.0) * 3.0) / 2.0;
+
+      // ═══ 4. PURE COLOR BLENDING ═══
+      // Give the pixelated blocks a tiny brightness boost (+10%) so they look like glowing LEDs
+      vec3 ledColor = min(pixelColor * 1.1, 1.0);
+      vec3 finalColor = mix(smoothColor, ledColor, steppedShimmer);
+
+      // ═══ 5. PAGE-LOAD PIXEL REVEAL ═══
+      if (uRevealProgress < 1.0) {
+        float cellCount = floor(uResolution.x / 20.0);
+        vec2 revealGrid = vec2(cellCount, cellCount * uResolution.y / uResolution.x);
+        vec2 cell = floor(vUv * revealGrid);
+        float noise = hash(cell);
+        float sweep = 1.0 - vUv.y;
+        float threshold = noise * 0.3 + sweep * 0.7;
+        vec3 revealColor = mix(vec3(0.88), vec3(0.14), uIsDark);
+        vec3 preRevealColor = mix(vec3(0.96), vec3(0.004), uIsDark);
+
+        if (uRevealProgress > threshold + 0.08) {
+          // Fully revealed
+        } else if (uRevealProgress > threshold) {
+          gl_FragColor = vec4(revealColor, 1.0);
+          return;
+        } else {
+          gl_FragColor = vec4(preRevealColor, 1.0);
+          return;
+        }
+      }
+
+      gl_FragColor = vec4(finalColor, 1.0);
+    }
+`
+
+export default function HeroGradientGL({ revealTrigger }: HeroGradientGLProps) {
+  const tc = useThemeColors()
+  const containerRef = useRef<HTMLDivElement>(null)
+  const rendererRef = useRef<THREE.WebGLRenderer | null>(null)
+  const materialRef = useRef<THREE.ShaderMaterial | null>(null)
+  const sceneRef = useRef<THREE.Scene | null>(null)
+  const cameraRef = useRef<THREE.OrthographicCamera | null>(null)
+  const rafRef = useRef<number>(0)
+  const startRef = useRef(0)
+  const mountedRef = useRef(true)
+  const mouseTargetRef = useRef({ x: 0.5, y: 0.5 })
+
+  // Init Three.js immediately (hero is always visible)
+  useEffect(() => {
+    mountedRef.current = true
+    const container = containerRef.current
+    if (!container) return
+
+    const width = container.clientWidth || 300
+    const height = container.clientHeight || 300
+
+    const scene = new THREE.Scene()
+    sceneRef.current = scene
+
+    const camera = new THREE.OrthographicCamera(-0.5, 0.5, 0.5, -0.5, 0.1, 10)
+    camera.position.z = 1
+    cameraRef.current = camera
+
+    const renderer = new THREE.WebGLRenderer({
+      alpha: false,
+      antialias: false,
+      powerPreference: 'low-power',
+    })
+    renderer.setSize(width, height)
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+    container.appendChild(renderer.domElement)
+    rendererRef.current = renderer
+
+    const material = new THREE.ShaderMaterial({
+      vertexShader,
+      fragmentShader,
+      uniforms: {
+        uTime: { value: 0 },
+        uRevealProgress: { value: 0 },
+        uResolution: { value: new THREE.Vector2(width, height) },
+        uMouse: { value: new THREE.Vector2(0.5, 0.5) },
+        uMouseActive: { value: 0 },
+        uIsDark: { value: 1.0 },
+      },
+    })
+    materialRef.current = material
+
+    const geometry = new THREE.PlaneGeometry(1, 1)
+    const mesh = new THREE.Mesh(geometry, material)
+    scene.add(mesh)
+
+    startRef.current = performance.now() / 1000
+
+    // Continuous render loop — uTime + damped mouse tracking
+    const dampingSpeed = 0.08
+    const tick = () => {
+      if (!mountedRef.current) return
+      const now = performance.now() / 1000
+      material.uniforms.uTime.value = now - startRef.current
+
+      // Lerp uMouse toward mouseTarget for fluid trailing
+      const mouse = material.uniforms.uMouse.value
+      const target = mouseTargetRef.current
+      mouse.x += (target.x - mouse.x) * dampingSpeed
+      mouse.y += (target.y - mouse.y) * dampingSpeed
+
+      renderer.render(scene, camera)
+      rafRef.current = requestAnimationFrame(tick)
+    }
+    rafRef.current = requestAnimationFrame(tick)
+
+    // ─── Mouse interaction ───
+    // Listen on window because the canvas sits behind overlay layers
+    let mouseActiveTween: { kill: () => void } | null = null
+    let isInsideHero = false
+    let gsapModule: { default: { to: Function } } | null = null
+
+    const loadGsap = async () => {
+      if (!gsapModule) gsapModule = await import('gsap')
+      return gsapModule.default
+    }
+
+    const onWindowMouseMove = async (e: MouseEvent) => {
+      const rect = renderer.domElement.getBoundingClientRect()
+      const inside =
+        rect.width > 0 &&
+        rect.height > 0 &&
+        e.clientX >= rect.left &&
+        e.clientX <= rect.right &&
+        e.clientY >= rect.top &&
+        e.clientY <= rect.bottom
+
+      if (inside) {
+        // Update mouse target (damped in render loop)
+        const x = (e.clientX - rect.left) / rect.width
+        const y = 1.0 - (e.clientY - rect.top) / rect.height
+        mouseTargetRef.current.x = x
+        mouseTargetRef.current.y = y
+
+        // Fade in uMouseActive if just entered
+        if (!isInsideHero) {
+          isInsideHero = true
+          const gsap = await loadGsap()
+          mouseActiveTween?.kill()
+          mouseActiveTween = gsap.to(material.uniforms.uMouseActive, {
+            value: 1,
+            duration: 0.3,
+            ease: 'power2.out',
+          })
+        }
+      } else if (isInsideHero) {
+        // Mouse left — fade out
+        isInsideHero = false
+        const gsap = await loadGsap()
+        mouseActiveTween?.kill()
+        mouseActiveTween = gsap.to(material.uniforms.uMouseActive, {
+          value: 0,
+          duration: 0.3,
+          ease: 'power2.in',
+        })
+      }
+    }
+
+    window.addEventListener('mousemove', onWindowMouseMove)
+
+    // ResizeObserver
+    const ro = new ResizeObserver((entries) => {
+      const { width: w, height: h } = entries[0].contentRect
+      if (w > 0 && h > 0 && rendererRef.current) {
+        rendererRef.current.setSize(w, h)
+        if (materialRef.current) {
+          materialRef.current.uniforms.uResolution.value.set(w, h)
+        }
+      }
+    })
+    ro.observe(container)
+
+    return () => {
+      mountedRef.current = false
+      cancelAnimationFrame(rafRef.current)
+      ro.disconnect()
+      mouseActiveTween?.kill()
+
+      window.removeEventListener('mousemove', onWindowMouseMove)
+
+      renderer.dispose()
+      if (container.contains(renderer.domElement)) {
+        container.removeChild(renderer.domElement)
+      }
+      scene.traverse((obj) => {
+        if (obj instanceof THREE.Mesh) {
+          obj.geometry.dispose()
+          if (obj.material instanceof THREE.ShaderMaterial) {
+            obj.material.dispose()
+          }
+        }
+      })
+    }
+  }, [])
+
+  // Trigger page-load reveal animation via GSAP
+  useEffect(() => {
+    if (!revealTrigger || !materialRef.current) return
+
+    let ctx: { revert: () => void } | null = null
+
+    const animate = async () => {
+      const { default: gsap } = await import('gsap')
+      ctx = gsap.context(() => {
+        gsap.to(materialRef.current!.uniforms.uRevealProgress, {
+          value: 1,
+          duration: 1.8,
+          ease: 'power2.inOut',
+        })
+      })
+    }
+
+    animate()
+
+    return () => {
+      ctx?.revert()
+    }
+  }, [revealTrigger])
+
+  // Update uIsDark uniform when theme changes
+  useEffect(() => {
+    if (materialRef.current) {
+      materialRef.current.uniforms.uIsDark.value = tc.isDark ? 1.0 : 0.0
+    }
+  }, [tc.isDark])
+
+  return (
+    <div
+      ref={containerRef}
+      style={{
+        position: 'absolute',
+        inset: 0,
+        width: '100%',
+        height: '100%',
+        zIndex: 0,
+      }}
+    />
+  )
+}

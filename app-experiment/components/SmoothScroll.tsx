@@ -12,28 +12,22 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
       duration: 1.2,
       easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // easeOutExpo
       touchMultiplier: 2,
-      autoRaf: false, // We'll drive Lenis from GSAP's ticker
     })
 
     lenisRef.current = lenis
-    // Expose Lenis globally so view toggle scroll sync can use it
-    ;(window as any).__lenis = lenis
 
-    // Sync Lenis with GSAP's ticker — single frame clock, no fighting
+    // Integrate with GSAP ScrollTrigger
     const connectScrollTrigger = async () => {
-      const { default: gsap } = await import('gsap')
       const { ScrollTrigger } = await import('gsap/ScrollTrigger')
-      gsap.registerPlugin(ScrollTrigger)
-
       lenis.on('scroll', ScrollTrigger.update)
-
-      // Drive Lenis from GSAP ticker instead of separate RAF loop
-      gsap.ticker.add((time: number) => {
-        lenis.raf(time * 1000)
-      })
-      gsap.ticker.lagSmoothing(0)
     }
     connectScrollTrigger()
+
+    function raf(time: number) {
+      lenis.raf(time)
+      requestAnimationFrame(raf)
+    }
+    requestAnimationFrame(raf)
 
     return () => {
       lenis.destroy()

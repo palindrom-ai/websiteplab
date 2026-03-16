@@ -1,49 +1,22 @@
 'use client'
 
 import { useState, useRef, useCallback } from 'react'
-import { useFeatureFlagVariantKey } from '@posthog/react'
-import posthog from 'posthog-js'
 import BlueprintIntro from './BlueprintIntro'
 import TextScramble from './TextScramble'
 import MosaicOverlay from './MosaicOverlay'
-import AsciiOverlay from './AsciiOverlay'
 import HeroGradientGL from './HeroGradientGL'
 import ArrowIcon from './ArrowIcon'
-import { BRAINSTORM_HREF, openBrainstormEmail } from './brainstormMailto'
 
 interface HeroSectionProps {
   onNavReveal: () => void
   onBrandReveal: () => void
 }
 
-const HEADLINE = "We're building custom AI agents that scale for the most complex problems in the real world"
-const HEADLINE_JSX = (
-  <>
-    We&apos;re building <strong>custom AI agents</strong> that scale
-    for the <strong>most complex problems</strong> in the{' '}
-    <strong>real world</strong>
-  </>
-)
-
-const HERO_VARIANTS = {
-  control: {
-    headline: HEADLINE,
-    headlineJsx: HEADLINE_JSX,
-    cta: 'Request a brainstorm',
-  },
-  variant: {
-    headline: HEADLINE,
-    headlineJsx: HEADLINE_JSX,
-    cta: 'Start a conversation',
-  },
-} as const
+const HEADLINE_TEXT =
+  "We're building custom AI agents that scale for the most complex problems in the real world"
 
 export default function HeroSection({ onNavReveal, onBrandReveal }: HeroSectionProps) {
-  const flagVariant = useFeatureFlagVariantKey('hero-ab-test')
-  const variant = flagVariant === 'variant' ? HERO_VARIANTS.variant : HERO_VARIANTS.control
-
   const [mosaicActive, setMosaicActive] = useState(false)
-  const [asciiActive, setAsciiActive] = useState(false)
   const [heroReveal, setHeroReveal] = useState(false)
   const [scrambleTrigger, setScrambleTrigger] = useState(false)
   const [scrambleDone, setScrambleDone] = useState(false)
@@ -68,9 +41,6 @@ export default function HeroSection({ onNavReveal, onBrandReveal }: HeroSectionP
 
     // Activate mosaic overlay (interactive pixel trail)
     setMosaicActive(true)
-
-    // Activate ASCII overlay (mouse-reactive text grid)
-    addTimer(() => setAsciiActive(true), 200)
 
     // Trigger hero gradient pixel reveal
     setHeroReveal(true)
@@ -97,15 +67,12 @@ export default function HeroSection({ onNavReveal, onBrandReveal }: HeroSectionP
         {/* Layer 1: Interactive mosaic pixel grid — digital wake trail */}
         <MosaicOverlay active={mosaicActive} />
 
-        {/* Layer 2: ASCII text overlay — mouse-reactive character grid */}
-        <AsciiOverlay active={asciiActive} />
-
-        {/* Layer 3: Hero content — bottom-left inside frame */}
+        {/* Layer 2: Hero content — bottom-left inside frame */}
         <div className="exp-hero-content">
           {/* Headline with TextScramble → bold keywords after resolve */}
           {!scrambleDone ? (
             <TextScramble
-              text={variant.headline}
+              text={HEADLINE_TEXT}
               trigger="load"
               triggerWhen={scrambleTrigger}
               duration={1200}
@@ -114,7 +81,9 @@ export default function HeroSection({ onNavReveal, onBrandReveal }: HeroSectionP
             />
           ) : (
             <h1 className="exp-hero-headline">
-              {variant.headlineJsx}
+              We&apos;re building <strong>custom AI agents</strong> that scale
+              for the <strong>most complex problems</strong> in the{' '}
+              <strong>real world</strong>
             </h1>
           )}
 
@@ -127,15 +96,8 @@ export default function HeroSection({ onNavReveal, onBrandReveal }: HeroSectionP
               transition: 'opacity 0.6s ease, transform 0.6s ease',
             }}
           >
-            <a href={BRAINSTORM_HREF} onClick={(e) => {
-              posthog.capture('hero_cta_clicked', {
-                variant: flagVariant || 'control',
-                cta_text: variant.cta,
-                headline: variant.headline,
-              })
-              openBrainstormEmail(e)
-            }} className="exp-btn-filled">
-              {variant.cta} <ArrowIcon />
+            <a href="#contact" className="exp-btn-filled">
+              Request a brainstorm <ArrowIcon />
             </a>
             <a href="#work" className="exp-btn-outline">
               See our work <ArrowIcon />
