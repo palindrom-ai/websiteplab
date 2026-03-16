@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react'
 import ScrollDecode from './ScrollDecode'
 import ArrowIcon from './ArrowIcon'
 import FooterGradient from './FooterGradientText'
+import { BRAINSTORM_HREF, openBrainstormEmail } from './brainstormMailto'
 
 export default function CTASection() {
   const ctaRef = useRef<HTMLDivElement>(null)
@@ -53,11 +54,12 @@ export default function CTASection() {
           Let&apos;s talk about what AI can do for your business.
         </p>
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 24, flexWrap: 'wrap' }}>
-          <a href="mailto:hello@progressionlabs.com" className="exp-btn-filled">
+          <a href={BRAINSTORM_HREF} onClick={openBrainstormEmail} className="exp-btn-filled">
             Request a brainstorm <ArrowIcon />
           </a>
           <a
-            href="mailto:hello@progressionlabs.com"
+            href={BRAINSTORM_HREF}
+            onClick={openBrainstormEmail}
             style={{
               color: 'var(--exp-text-secondary)',
               textDecoration: 'none',
@@ -73,7 +75,7 @@ export default function CTASection() {
               e.currentTarget.style.color = 'var(--exp-text-secondary)'
             }}
           >
-            hello@progressionlabs.com
+            gabor.soter@progressionlabs.com
           </a>
         </div>
       </section>

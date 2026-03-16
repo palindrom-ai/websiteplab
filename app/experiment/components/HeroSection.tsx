@@ -7,6 +7,7 @@ import MosaicOverlay from './MosaicOverlay'
 import AsciiOverlay from './AsciiOverlay'
 import HeroGradientGL from './HeroGradientGL'
 import ArrowIcon from './ArrowIcon'
+import { BRAINSTORM_HREF, openBrainstormEmail } from './brainstormMailto'
 
 interface HeroSectionProps {
   onNavReveal: () => void
@@ -104,7 +105,7 @@ export default function HeroSection({ onNavReveal, onBrandReveal }: HeroSectionP
               transition: 'opacity 0.6s ease, transform 0.6s ease',
             }}
           >
-            <a href="#contact" className="exp-btn-filled">
+            <a href={BRAINSTORM_HREF} onClick={openBrainstormEmail} className="exp-btn-filled">
               Request a brainstorm <ArrowIcon />
             </a>
             <a href="#work" className="exp-btn-outline">

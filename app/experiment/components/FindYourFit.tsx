@@ -7,6 +7,7 @@ import StepIcons from './StepIcons'
 import { useColorCycle } from './useColorCycle'
 import PixelGradientCanvas from './PixelGradientCanvas'
 import FinderAsciiOverlay from './FinderAsciiOverlay'
+import { BRAINSTORM_HREF, openBrainstormEmail } from './brainstormMailto'
 
 const TYPING_SPEED = 35 // ms per character
 
@@ -471,7 +472,7 @@ export default function FindYourFit() {
                 </div>
               </div>
               <div className={`exp-terminal-line${resultLines >= 5 ? ' exp-terminal-line--visible' : ''}`}>
-                <a href="#contact" className="exp-btn-filled" style={{ marginTop: 16 }}>
+                <a href={BRAINSTORM_HREF} onClick={openBrainstormEmail} className="exp-btn-filled" style={{ marginTop: 16 }}>
                   {recommendation.cta} <ArrowIcon />
                 </a>
               </div>

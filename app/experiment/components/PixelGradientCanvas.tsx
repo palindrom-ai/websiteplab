@@ -121,16 +121,17 @@ const fragmentShaderSource = `
     vec3 pixelColor = computeGradient(pixelUv, u_time, peakA, peakB);
     pixelColor += (hash(cellId) - 0.5) * 0.035;
 
-    // === EDGE MASK — pixel border on sides/top, open bottom ===
-    float edgeL = smoothstep(0.0, 0.25, uv.x);
-    float edgeR = smoothstep(1.0, 0.75, uv.x);
-    float edgeT = smoothstep(1.0, 0.75, uv.y);
-    float interior = edgeL * edgeR * edgeT; // No bottom mask — bottom stays open
+    // === EDGE MASK — thin pixel border at edges, smooth center ===
+    float edgeL = smoothstep(0.0, 0.15, uv.x);
+    float edgeR = smoothstep(1.0, 0.85, uv.x);
+    float edgeT = smoothstep(1.0, 0.88, uv.y);
+    float interior = edgeL * edgeR * edgeT;
+    float edgePix = 1.0 - interior;
 
-    // === BRIGHTNESS-DRIVEN PIXELATION ===
+    // === BRIGHTNESS-DRIVEN PIXELATION (helps transition zone) ===
     float intensity = max(smoothColor.r, max(smoothColor.g, smoothColor.b));
-    float edgeProximity = 1.0 - interior;
-    float brightPixel = smoothstep(0.15, 0.5, intensity) * edgeProximity * 0.8;
+    float transitionZone = smoothstep(0.0, 0.5, edgePix);
+    float brightPixel = smoothstep(0.15, 0.5, intensity) * transitionZone * 0.8;
 
     // === DIAGONAL SHIMMER ===
     float diag = (uv.x + 1.0 - uv.y) * 0.5;
@@ -139,8 +140,8 @@ const fragmentShaderSource = `
     shimmerDist = min(shimmerDist, 1.0 - shimmerDist);
     float shimmerMask = exp(-shimmerDist * shimmerDist * 100.0) * 0.6;
 
-    // Combine: edges + bright areas + shimmer all push toward pixel blocks
-    float pixelAmount = max(max(1.0 - interior, brightPixel), shimmerMask);
+    // Combine: edges + bright transition areas + shimmer (no base floor)
+    float pixelAmount = max(max(edgePix, brightPixel), shimmerMask);
 
     // Fade pixelation to smooth in dark areas so grid doesn't show against black bg
     float darkFade = smoothstep(0.02, 0.10, max(smoothColor.r, max(smoothColor.g, smoothColor.b)));
