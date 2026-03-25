@@ -1877,6 +1877,18 @@ html:has(.experiment) { scroll-behavior: auto; }
   letter-spacing: 0.06em;
   text-transform: uppercase;
   transition: color 0.2s ease;
+  display: flex;
+  align-items: center;
+}
+
+.exp-pre-footer-social a svg {
+  display: block;
+  opacity: 0.5;
+  transition: opacity 0.2s ease;
+}
+
+.exp-pre-footer-social a:hover svg {
+  opacity: 1;
 }
 
 .exp-pre-footer-social a:hover {
@@ -1918,6 +1930,8 @@ html:has(.experiment) { scroll-behavior: auto; }
   z-index: 1;
   border-top: 1px dashed rgba(255, 255, 255, 0.12);
   border-bottom: none;
+  padding: 24px 96px;
+  margin-bottom: 16px;
 }
 
 .exp-footer-brand {
