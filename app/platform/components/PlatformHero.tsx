@@ -11,7 +11,7 @@ export default function PlatformHero() {
       <div className="plat-hero-text">
         <p className="plat-label">Progression Labs introduces</p>
         <h1 className="plat-h1">
-          <span style={{ color: '#0943A0' }}>Cortex</span>
+          <span style={{ color: '#1a3a8a' }}>Cortex</span>
         </h1>
         <p className="plat-hero-tagline">
           The <em>context layer</em> your AI agents actually need
