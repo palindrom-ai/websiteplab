@@ -1,10 +1,10 @@
-import ExperimentLayout from './experiment/layout'
-import ExperimentPage from './experiment/page'
+import PlatformLayout from './platform/layout'
+import PlatformPage from './platform/page'
 
 export default function Home() {
   return (
-    <ExperimentLayout>
-      <ExperimentPage />
-    </ExperimentLayout>
+    <PlatformLayout>
+      <PlatformPage />
+    </PlatformLayout>
   )
 }

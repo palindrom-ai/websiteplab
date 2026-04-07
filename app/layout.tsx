@@ -10,12 +10,12 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Progression Labs — AI Consultancy & Technology Partner",
+  title: "Cortex by Progression Labs — Auto-Improving Context Graphs for Enterprise",
   description:
-    "Progression Labs is an AI consultancy and technology partner delivering business transformation through production-ready artificial intelligence systems, strategic advisory, and managed AI platforms.",
+    "Cortex captures decision traces to build self-improving context graphs that automate enterprise workflows. Built by Progression Labs.",
   openGraph: {
-    title: "Progression Labs — AI Consultancy & Technology Partner",
-    description: "AI systems that work in production — not just in demos.",
+    title: "Cortex by Progression Labs — Auto-Improving Context Graphs for Enterprise",
+    description: "The context layer your AI agents actually need. Capture decision traces. Automate workflows.",
     type: "website",
     url: "https://progressionlabs.com",
   },

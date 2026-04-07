@@ -4,7 +4,7 @@ const nextConfig = {
     return [
       {
         source: '/',
-        destination: '/experiment',
+        destination: '/platform',
       },
     ]
   },
