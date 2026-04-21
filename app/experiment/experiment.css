@@ -1694,7 +1694,7 @@ html:has(.experiment) { scroll-behavior: auto; }
 .exp-blog-section {
   max-width: var(--exp-container);
   margin: 0 auto;
-  padding: var(--exp-section-pad) 32px;
+  padding: var(--exp-section-pad) 80px;
 }
 
 .exp-blog-header {
