@@ -1714,6 +1714,8 @@ html:has(.experiment) { scroll-behavior: auto; }
   text-decoration: none;
   color: inherit;
   cursor: pointer;
+  min-width: 0;
+  overflow: hidden;
 }
 
 /* Image: rounded, tall aspect ratio */
@@ -1771,6 +1773,8 @@ html:has(.experiment) { scroll-behavior: auto; }
   line-height: 1.45;
   margin: 0 0 8px 0;
   transition: color 0.2s ease;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .exp-blog-card:hover .exp-blog-title {
