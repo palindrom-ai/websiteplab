@@ -85,7 +85,7 @@ export default function GloboCaseStudy() {
   // Section + counter animations
   useGSAPCounter()
 
-  // Fade-up sections on scroll
+  // Fade-up sections on scroll, plus staggers for criteria + stats
   useEffect(() => {
     let ctx: { revert: () => void } | null = null
     const init = async () => {
@@ -106,6 +106,41 @@ export default function GloboCaseStudy() {
             },
           )
         })
+
+        // Stagger criteria items
+        document.querySelectorAll<HTMLElement>('.criteria').forEach((wrap) => {
+          const items = wrap.querySelectorAll<HTMLElement>('.criterion')
+          if (!items.length) return
+          gsap.fromTo(
+            items,
+            { opacity: 0, y: 16 },
+            {
+              opacity: 1,
+              y: 0,
+              duration: 0.7,
+              stagger: 0.08,
+              ease: 'power2.out',
+              scrollTrigger: { trigger: wrap, start: 'top 80%', once: true },
+            },
+          )
+        })
+
+        // Stagger stat cards
+        const statCards = document.querySelectorAll<HTMLElement>('.story-stat')
+        if (statCards.length) {
+          gsap.fromTo(
+            statCards,
+            { opacity: 0, y: 18 },
+            {
+              opacity: 1,
+              y: 0,
+              duration: 0.8,
+              stagger: 0.12,
+              ease: 'power2.out',
+              scrollTrigger: { trigger: statCards[0], start: 'top 85%', once: true },
+            },
+          )
+        }
       })
     }
     init()
