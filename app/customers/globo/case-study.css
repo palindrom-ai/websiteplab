@@ -379,17 +379,6 @@
   margin: 0 0 32px 0;
   position: relative;
 }
-.experiment .story-quote::before {
-  content: "\201C";
-  position: absolute;
-  left: -36px;
-  top: -16px;
-  font-family: var(--exp-mono);
-  font-size: 56px;
-  font-weight: 300;
-  color: var(--exp-text-tertiary);
-  line-height: 1;
-}
 .experiment .story-quote em {
   font-style: normal;
   color: #6db4ff;
@@ -424,7 +413,6 @@
   .experiment .story-section { grid-template-columns: 1fr; gap: 32px; padding: 64px 40px; }
   .experiment .story-section-label { position: static; }
   .experiment .story-quote-section { padding: 64px 40px; }
-  .experiment .story-quote::before { left: 0; top: -48px; }
 }
 
 @media (max-width: 640px) {
