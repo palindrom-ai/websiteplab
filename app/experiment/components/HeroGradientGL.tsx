@@ -132,7 +132,7 @@ const fragmentShader = `
     // ═══ 2. DUAL TEXTURES: smooth + pixelated ═══
     vec3 smoothColor = getGradientColor(vUv);
 
-    float blockPx = 45.0; // ~45px square blocks
+    float blockPx = 32.0; // ~32px square blocks
     vec2 grid = uResolution / blockPx;
     vec2 cellId = floor(vUv * grid);
     vec2 pixelUv = cellId / grid;
