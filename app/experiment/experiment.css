@@ -1941,7 +1941,7 @@ html:has(.experiment) { scroll-behavior: auto; }
 .exp-footer::after {
   content: '';
   position: absolute;
-  inset: 0;
+  inset: 0 80px;
   z-index: 1;
   pointer-events: none;
   mix-blend-mode: overlay;
