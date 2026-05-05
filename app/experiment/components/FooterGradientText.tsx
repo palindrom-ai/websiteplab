@@ -244,8 +244,9 @@ export default function FooterGradient() {
       ref={canvasRef}
       style={{
         position: 'absolute',
-        inset: 0,
-        width: '100%',
+        top: 0,
+        left: 80,
+        width: 'calc(100% - 160px)',
         height: '100%',
         display: 'block',
         zIndex: 0,
