@@ -46,25 +46,43 @@ const fragmentShaderSource = `
     return vec3(0.000, 0.000, 1.000);
   }
 
+  // 14-state color cycle over 70s — matching HeroGradientGL exactly
   void cycleColors(float time, out vec3 peakA, out vec3 peakB) {
     vec3 cO = brandColor(0); vec3 cS = brandColor(1);
     vec3 cG = brandColor(2); vec3 cT = brandColor(3); vec3 cB = brandColor(4);
 
-    float progress = mod(time, 45.0) / 45.0;
-    float seg = progress * 9.0;
+    // Extended palette — peak pairs for 5 additional themed states
+    vec3 cGold        = vec3(0.722, 0.671, 0.220); // #B8AB38
+    vec3 cVanilla     = vec3(0.878, 0.843, 0.580); // #E0D794
+    vec3 cWine        = vec3(0.435, 0.114, 0.106); // #6F1D1B
+    vec3 cAshGrey     = vec3(0.678, 0.741, 0.671); // #ADBDAB
+    vec3 cBurntPeach  = vec3(0.886, 0.447, 0.357); // #E2725B
+    vec3 cSoftApricot = vec3(1.000, 0.855, 0.725); // #FFDAB9
+    vec3 cInferno     = vec3(0.667, 0.000, 0.012); // #AA0003
+    vec3 cPeriwinkle  = vec3(0.749, 0.706, 0.863); // #BFB4DC
+    vec3 cMagenta     = vec3(1.000, 0.000, 1.000); // #FF00FF
+    vec3 cYellow      = vec3(1.000, 1.000, 0.000); // #FFFF00
+
+    float progress = mod(time, 70.0) / 70.0;
+    float seg = progress * 14.0;
     int idx = int(floor(seg));
     float t = ssmooth(seg - floor(seg));
 
     vec3 fA, fB, tA, tB;
-    if (idx == 0)      { fA = cO; fB = cO; tA = cB; tB = cS; }
-    else if (idx == 1) { fA = cB; fB = cS; tA = cG; tB = cG; }
-    else if (idx == 2) { fA = cG; fB = cG; tA = cO; tB = cT; }
-    else if (idx == 3) { fA = cO; fB = cT; tA = cS; tB = cS; }
-    else if (idx == 4) { fA = cS; fB = cS; tA = cB; tB = cT; }
-    else if (idx == 5) { fA = cB; fB = cT; tA = cB; tB = cB; }
-    else if (idx == 6) { fA = cB; fB = cB; tA = cO; tB = cG; }
-    else if (idx == 7) { fA = cO; fB = cG; tA = cT; tB = cT; }
-    else               { fA = cT; fB = cT; tA = cO; tB = cO; }
+    if (idx == 0)       { fA = cO;          fB = cO;           tA = cB;          tB = cS;           }
+    else if (idx == 1)  { fA = cB;          fB = cS;           tA = cG;          tB = cG;           }
+    else if (idx == 2)  { fA = cG;          fB = cG;           tA = cGold;       tB = cVanilla;     } // → Ancient Gild
+    else if (idx == 3)  { fA = cGold;       fB = cVanilla;     tA = cO;          tB = cT;           } // bridge
+    else if (idx == 4)  { fA = cO;          fB = cT;           tA = cS;          tB = cS;           }
+    else if (idx == 5)  { fA = cS;          fB = cS;           tA = cBurntPeach; tB = cSoftApricot; } // → Terracotta Sunset
+    else if (idx == 6)  { fA = cBurntPeach; fB = cSoftApricot; tA = cWine;       tB = cAshGrey;     } // → Vintage Hearth
+    else if (idx == 7)  { fA = cWine;       fB = cAshGrey;     tA = cB;          tB = cT;           } // bridge
+    else if (idx == 8)  { fA = cB;          fB = cT;           tA = cB;          tB = cB;           }
+    else if (idx == 9)  { fA = cB;          fB = cB;           tA = cInferno;    tB = cPeriwinkle;  } // → Scarlet Glacier
+    else if (idx == 10) { fA = cInferno;    fB = cPeriwinkle;  tA = cMagenta;    tB = cYellow;      } // → Retro Future
+    else if (idx == 11) { fA = cMagenta;    fB = cYellow;      tA = cO;          tB = cG;           } // bridge
+    else if (idx == 12) { fA = cO;          fB = cG;           tA = cT;          tB = cT;           }
+    else                { fA = cT;          fB = cT;           tA = cO;          tB = cO;           }
 
     peakA = mix(fA, tA, t);
     peakB = mix(fB, tB, t);
